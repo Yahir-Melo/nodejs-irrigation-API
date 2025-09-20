@@ -1,0 +1,13 @@
+{
+  "name": "api_riego_app",
+  "version": "0.0.1",
+  "description": "API escalable para una aplicación de riego, desarrollada con Node.js, Express, Prisma y PostgreSQL. Implementa buenas prácticas de desarrollo para garantizar un código limpio, mantenible y robusto.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+    
+  },
+  "author": "Jesus Jahir Melo Vargas",
+  "license": "ISC"
+}
+
