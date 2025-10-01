@@ -62,3 +62,6 @@ se crearon los archivos ***DEVELOPMENT.dm*** el cual se utiliza para guardar el 
   * ***Para Desplegar:*** Usas npm run start en el servidor para ejecutar la versión de JavaScript ya compilada.
 
 
+* ***8 - Se ejecuto el comando start:*** nota para mi borrar esto y documenta por que el comando start creo archivos en la carpeta dist que significa cada uno 
+
+   ![Imagen de carpetas del proyecto](assets/dist-files.png)
