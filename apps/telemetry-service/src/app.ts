@@ -14,7 +14,7 @@ import 'dotenv/config';
 const dbHost = process.env.DB_HOST;
 const dbUser = process.env.DB_USER;
 const apiKey = process.env.API_KEY_WEATHER;
-const port = process.env.PORT;
+const port = process.env.PORT_API;
 
 console.log(`Conectando a la base de datos en: ${dbHost}\nUsuario: ${dbUser}`);
 console.log(`Usando la API Key: ${apiKey}\nPUERTO: ${port}`);

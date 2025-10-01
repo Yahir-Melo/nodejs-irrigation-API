@@ -1,7 +1,7 @@
 
 ## 📁 Estructura del Proyecto
 
-![Imagen de estructura actual del proyecto](assets/estructure-project.png)
+![Imagen de estructura actual del proyecto](https://i.imgur.com/kywZhF5.png)
 
 
 
