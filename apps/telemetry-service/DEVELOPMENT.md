@@ -145,3 +145,13 @@ $\small \text{ Fecha: 2025-OCT-02} $
 
 * ***4 - Creación de la carpeta `public`:*** Se creó la carpeta `public/` en la raíz del proyecto.
     *   Dentro se añadió un archivo `index.html` básico. Esta carpeta es servida por `***Express***` para mostrar contenido estático, como una página de bienvenida para la API.
+
+### **Fase 4: Estructura de Dominio y Archivos de Barril**
+$\small \text{ Fecha: 2025-OCT-02} $
+
+* ***1 - Creación de la carpeta `domain`:*** Se creó la carpeta `src/domain`. Esta carpeta es fundamental para aplicar principios de Diseño Guiado por el Dominio (DDD). Su objetivo es aislar la lógica y las reglas de negocio principales de la aplicación, independientemente de la tecnología externa (como la base de datos o el framework web).
+    *   Dentro de `domain`, se creó la subcarpeta `errors` para centralizar la definición de errores personalizados, como `custom.error.ts`.
+
+* ***2 - Implementación de Archivos de Barril (`index.ts`):*** Se ha adoptado el uso de archivos de barril. Un archivo `index.ts` dentro de una carpeta (como `domain/`) se utiliza para re-exportar todos los módulos importantes de ese directorio.
+    *   **Propósito:** Simplificar las importaciones en otras partes del código. En lugar de importar cada archivo por separado (`import { CustomError } from '../domain/errors/custom.error'`), se puede hacer una sola importación desde la carpeta (`import { CustomError } from '../domain'`).
+    *   Esto mejora la legibilidad y facilita la refactorización, ya que la estructura interna de la carpeta `domain` puede cambiar sin afectar a los archivos que la consumen.
