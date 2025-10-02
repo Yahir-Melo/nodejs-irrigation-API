@@ -14,3 +14,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+
+
+// --- ENTIDAD DE USUARIO ---
+// Almacena la información fundamental del usuario.
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique // El email es único para cada usuario y se usa para el login.
+  name      String?  // Nombre opcional del usuario.
+  password  String   // ¡IMPORTANTE! Aquí se guarda la contraseña HASHEADA, no en texto plano.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relación: Un usuario puede tener muchos tokens de autenticación.
+  tokens AuthToken[]
+}
+
+
+// --- ENTIDAD PARA EL TOKEN DE AUTENTICACIÓN ---
+// Representa una sesión activa para un usuario.
+model AuthToken {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique // El token en sí (ej. un JWT). Se hace único para búsqueda rápida.
+  userId      Int      // La clave foránea que conecta este token con un usuario.
+  expiresAt   DateTime // Fecha de expiración del token para invalidarlo automáticamente.
+  createdAt   DateTime @default(now())
+
+  // Relación: Cada token pertenece a un único usuario.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Creamos un índice en userId para acelerar las búsquedas de tokens por usuario.
+  @@index([userId])
+}
