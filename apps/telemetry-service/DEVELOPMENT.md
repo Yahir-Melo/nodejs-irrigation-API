@@ -71,7 +71,7 @@ se crearon los archivos ***DEVELOPMENT.dm*** el cual se utiliza para guardar el 
 
   * ***app.d.ts (Archivo de Declaración de Tipos):*** Este archivo contiene solo las ***"firmas"*** de tipo de tu código. No contiene la lógica, solo la descripción de las funciones, variables y sus tipos. Es muy útil si quieres que otros proyectos de ***TypeScript*** utilicen tu código, ya que les proporciona autocompletado y verificación de tipos.
 
-  * ***app.d.ts.map:*** Al igual que el ***app.js.map***, este es un mapa de código fuente pero para el archivo de declaración de tipos.
+  * ***app.d.ts.map:*** Al igual que el ***app.js.map***, este es un mapa de código fuente para el archivo de declaración de tipos.
 
   * ***NOTA:*** se agrego al ***tsconfig.json***  
 
@@ -155,3 +155,26 @@ $\small \text{ Fecha: 2025-OCT-02} $
 * ***2 - Implementación de Archivos de Barril (`index.ts`):*** Se ha adoptado el uso de archivos de barril. Un archivo `index.ts` dentro de una carpeta (como `domain/`) se utiliza para re-exportar todos los módulos importantes de ese directorio.
     *   **Propósito:** Simplificar las importaciones en otras partes del código. En lugar de importar cada archivo por separado (`import { CustomError } from '../domain/errors/custom.error'`), se puede hacer una sola importación desde la carpeta (`import { CustomError } from '../domain'`).
     *   Esto mejora la legibilidad y facilita la refactorización, ya que la estructura interna de la carpeta `domain` puede cambiar sin afectar a los archivos que la consumen.
+
+### **Fase 5: Implementación de Autenticación y Registro**
+$\small \text{ Fecha: 2025-OCT-02} $
+
+* ***1 - Actualización del Esquema de Base de Datos (`prisma/schema.prisma`):***
+    *   Se añadió un enumerador `Role` para definir los roles de usuario (`USER`, `ADMIN`).
+    *   Se actualizó la entidad `User` para incluir un campo `role` y un campo `verificatedEmail`, preparando el sistema para funcionalidades de control de acceso y verificación de correo.
+
+* ***2 - Creación de la Capa de Controladores de Autenticación (`src/controllers/auth_controller.ts`):***
+    *   Se creó la clase `AuthController` para manejar las peticiones HTTP relacionadas con la autenticación.
+    *   Se implementó el método `registerUser`, que valida los datos de entrada utilizando un DTO.
+
+* ***3 - Creación de DTOs (Data Transfer Objects) para Autenticación (`src/domain/dtos/auth/register-user.dto.ts`):***
+    *   Se creó el `RegisterUserDto` para encapsular y validar los datos necesarios para el registro de un nuevo usuario (nombre, email, contraseña).
+    *   Este DTO asegura que los datos que llegan al controlador son válidos antes de continuar con la lógica de negocio.
+
+* ***4 - Creación de la carpeta `config` (`src/config`):***
+    *   Se creó la carpeta `src/config` para centralizar configuraciones globales.
+    *   Se añadió `regular-exp.ts` para almacenar y gestionar expresiones regulares, como la validación de emails.
+    *   Se utilizó un archivo de barril (`index.ts`) para facilitar la importación de estas configuraciones.
+
+* ***5 - Creación de la Entidad de Dominio `User` (`src/domain/entities/User.ts`):***
+    *   Se creó el archivo para la entidad `User`, que representará al usuario en la capa de dominio.
