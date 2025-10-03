@@ -34,7 +34,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      Role     @default(USER)
-
+  verificatedEmail Boolean @default(false)
   // Relación: Un usuario puede tener muchos tokens de autenticación.
   tokens AuthToken[]
 }
