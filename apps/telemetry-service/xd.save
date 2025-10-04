@@ -1,0 +1,36 @@
+El Flujo Completo de una Petición (POST /register)
+El Cliente envía una petición a tu API.
+
+Express (Router) recibe la petición y la dirige al UserController.register.
+
+El UserController:
+
+Toma req.body.
+
+Crea y valida un CreateUserDto.
+
+Llama a registerUserUseCase.execute(dto).
+
+El RegisterUserUseCase:
+
+Recibe el DTO.
+
+Llama a userRepository.findByEmail() para ver si el usuario existe.
+
+Hashea la contraseña.
+
+Crea una nueva instancia de la entidad User.
+
+Llama a userRepository.save(newUser).
+
+El PrismaUserRepository (la implementación):
+
+Recibe la entidad User.
+
+Ejecuta prisma.user.create({ data: ... }).
+
+Devuelve el usuario guardado.
+
+El Flujo Regresa: El resultado sube de vuelta al Caso de Uso, luego al Controlador.
+
+El UserController recibe el usuario creado, lo convierte en un DTO de respuesta seguro (sin el password) y envía la respuesta 201 Created al cliente.

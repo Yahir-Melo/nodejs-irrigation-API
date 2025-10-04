@@ -27,10 +27,10 @@ enum Role{
 // --- ENTIDAD DE USUARIO ---
 // Almacena la información fundamental del usuario.
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid())
   email     String   @unique // El email es único para cada usuario y se usa para el login.
   name      String?  // Nombre opcional del usuario.
-  password  String   // ¡IMPORTANTE! Aquí se guarda la contraseña HASHEADA, no en texto plano.
+  passwordHash  String   // ¡IMPORTANTE! Aquí se guarda la contraseña HASHEADA, no en texto plano.
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      Role     @default(USER)
@@ -45,7 +45,7 @@ model User {
 model AuthToken {
   id          Int      @id @default(autoincrement())
   token       String   @unique // El token en sí (ej. un JWT). Se hace único para búsqueda rápida.
-  userId      Int      // La clave foránea que conecta este token con un usuario.
+  userId      String      // La clave foránea que conecta este token con un usuario.
   expiresAt   DateTime // Fecha de expiración del token para invalidarlo automáticamente.
   createdAt   DateTime @default(now())
 
