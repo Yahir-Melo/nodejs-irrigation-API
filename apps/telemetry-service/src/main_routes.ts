@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Authroutes } from './routes/routes.js';
+import { Authroutes } from './presentation/routes/routes.js';
 /**
  * @description Importaciones para el enrutador principal.
  * - `Router`: La clase de Express para crear enrutadores.

@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth_controller.js";
-/**
+
+import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
+import { UserPrismaDatasource } from "../../infrastructure/datasources/prisma-user-datasource.js";
+/*
  * @description Importaciones necesarias para definir las rutas de autenticación.
  * - `Router`: Es una clase de Express que permite crear manejadores de rutas modulares y montables.
  *   Analogía: Es un "sub-gerente" que se especializa en una sección del restaurante (ej: solo los postres).
@@ -16,7 +19,15 @@ export class Authroutes {
      * - `const router = Router()`: Aquí se crea el "organizador" o "sub-gerente" que agrupará todas las rutas de autenticación.
      */
 
-    const controller = new AuthController();
+    // --- INYECCIÓN DE DEPENDENCIAS ---
+    // 1. Crear una instancia del repositorio de datos.
+    const userRepository = new UserPrismaDatasource();
+    
+    // 2. Crear una instancia del caso de uso, inyectándole el repositorio.
+    const registerUseCase = new RegisterUserUseCase(userRepository);
+
+    // 3. Crear una instancia del controlador, inyectándole el caso de uso.
+    const controller = new AuthController(registerUseCase);
     /**
      * @description Creación de una instancia del controlador.
      * - Se crea un objeto `controller` a partir de la clase `AuthController`.

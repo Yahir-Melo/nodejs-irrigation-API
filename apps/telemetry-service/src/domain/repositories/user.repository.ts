@@ -1,6 +1,6 @@
 
-import { RegisterUserDto } from '../../dtos/auth/register.user.dto.js';
-import { UserEntity } from '../../entities/user.entity.js';
+import { RegisterUserDto } from '../dtos/auth/register.user.dto.js';
+import { UserEntity } from '../entities/user.entity.js';
 
 
 export abstract class UserRepository{
