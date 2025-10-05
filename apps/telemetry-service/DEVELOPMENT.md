@@ -23,7 +23,7 @@ se crearon los archivos ***DEVELOPMENT.dm*** el cual se utiliza para guardar el 
 
 * ***1 - Instalar TypeScript:*** para instalar TypeScript y node Type  se utiliza el comando ` npm i -D typescript @types/node` estas dependencias son de desarrollo asi que asegurarse de que esten en ***DevDependecies*** en el ***package.json***, estas por ningun motivo llegan a produccion.
 
-* ***2 - inicializar el archivo de configuracion de TypeScript:*** (se puede configurar al gusto)  `npx tsc --init  -- outDir dist/ --rootDir src`  ( ***-- outDir dist/*** con este comando configura donde se guardara los archivos de salida de js y con ***--rootDir src*** se configura la carpeta src como principal ).
+* **2 - inicializar el archivo de configuracion de TypeScript:** (se puede configurar al gusto)  `npx tsc --init  -- outDir dist/ --rootDir src`  ( ***-- outDir dist/*** con este comando configura donde se guardara los archivos de salida de js y con ***--rootDir src*** se configura la carpeta src como principal ).
 
 * ***3 - Cambiar el app.js por app.ts:*** se cambio el ***app.js*** por ***app.ts*** para emprezar a utilizar ***TypeScript***, tambien se crea la carpeta ***dist***. esta carpeta contendrá la versión de JavaScript de los archivos de la carpeta src.
 
@@ -139,9 +139,9 @@ $\small \text{ Fecha: 2025-OCT-02} $
 
 * ***2 - Creación de `server.ts`:*** Se creó el archivo `src/server.ts`. Este archivo es fundamental ya que contiene la clase `Server`, la cual encapsula toda la lógica de configuración y arranque del servidor `***Express***`.
 
-* ***3 - Creación de la estructura de rutas:*** Para mantener el código organizado, se crearon los siguientes archivos que definen la estructura de las rutas de la API:
-    *   `src/main_routes.ts`: Actúa como el enrutador principal. Su propósito es centralizar y distribuir las peticiones a los enrutadores especializados.
-    *   `src/routes/routes.ts`: Un enrutador especializado para un conjunto de funcionalidades (en este caso, autenticación).
+* ***3 - Creación de la estructura de rutas (Arquitectura Limpia):*** Para alinear el proyecto con la Arquitectura Limpia, la estructura de rutas se ha organizado de la siguiente manera:
+    *   `src/main_routes.ts`: Actúa como el enrutador principal de la aplicación. Su responsabilidad es importar y delegar las peticiones al enrutador de la capa de presentación.
+    *   `src/presentation/routes/routes.ts`: Este archivo, ubicado en la capa de presentación, define las rutas específicas de la API (por ejemplo, `/api/auth`). Asocia cada ruta a un método del controlador correspondiente.
 
 * ***4 - Creación de la carpeta `public`:*** Se creó la carpeta `public/` en la raíz del proyecto.
     *   Dentro se añadió un archivo `index.html` básico. Esta carpeta es servida por `***Express***` para mostrar contenido estático, como una página de bienvenida para la API.
@@ -156,25 +156,57 @@ $\small \text{ Fecha: 2025-OCT-02} $
     *   **Propósito:** Simplificar las importaciones en otras partes del código. En lugar de importar cada archivo por separado (`import { CustomError } from '../domain/errors/custom.error'`), se puede hacer una sola importación desde la carpeta (`import { CustomError } from '../domain'`).
     *   Esto mejora la legibilidad y facilita la refactorización, ya que la estructura interna de la carpeta `domain` puede cambiar sin afectar a los archivos que la consumen.
 
-### **Fase 5: Implementación de Autenticación y Registro**
+### **Fase 5: Implementación de Autenticación y Registro (Arquitectura Limpia)**
 $\small \text{ Fecha: 2025-OCT-02} $
 
 * ***1 - Actualización del Esquema de Base de Datos (`prisma/schema.prisma`):***
     *   Se añadió un enumerador `Role` para definir los roles de usuario (`USER`, `ADMIN`).
     *   Se actualizó la entidad `User` para incluir un campo `role` y un campo `verificatedEmail`, preparando el sistema para funcionalidades de control de acceso y verificación de correo.
 
-* ***2 - Creación de la Capa de Controladores de Autenticación (`src/controllers/auth_controller.ts`):***
-    *   Se creó la clase `AuthController` para manejar las peticiones HTTP relacionadas con la autenticación.
-    *   Se implementó el método `registerUser`, que valida los datos de entrada utilizando un DTO.
+* ***2 - Creación de la Capa de Controladores (`src/presentation/controllers/auth_controller.ts`):***
+    *   Se creó la clase `AuthController` dentro de la capa de **presentación**. Su responsabilidad es manejar las peticiones y respuestas HTTP para la autenticación.
+    *   Se implementó el método `registerUser`, que orquesta el proceso de registro, validando la entrada con un DTO y llamando a la capa de dominio/servicio.
 
-* ***3 - Creación de DTOs (Data Transfer Objects) para Autenticación (`src/domain/dtos/auth/register-user.dto.ts`):***
-    *   Se creó el `RegisterUserDto` para encapsular y validar los datos necesarios para el registro de un nuevo usuario (nombre, email, contraseña).
-    *   Este DTO asegura que los datos que llegan al controlador son válidos antes de continuar con la lógica de negocio.
+* ***3 - Creación de DTOs de Dominio (`src/domain/dtos/auth/register-user.dto.ts`):***
+    *   Se creó el `RegisterUserDto` en la capa de **dominio**. Este objeto es responsable de encapsular y validar los datos de entrada para el registro de un usuario (nombre, email, contraseña).
+    *   Al estar en el dominio, asegura que las reglas de validación son consistentes y agnósticas a la capa de presentación.
 
 * ***4 - Creación de la carpeta `config` (`src/config`):***
     *   Se creó la carpeta `src/config` para centralizar configuraciones globales.
     *   Se añadió `regular-exp.ts` para almacenar y gestionar expresiones regulares, como la validación de emails.
     *   Se utilizó un archivo de barril (`index.ts`) para facilitar la importación de estas configuraciones.
 
-* ***5 - Creación de la Entidad de Dominio `User` (`src/domain/entities/User.ts`):***
-    *   Se creó el archivo para la entidad `User`, que representará al usuario en la capa de dominio.
+* ***5 - Creación de la Entidad de Dominio `User` (`src/domain/entities/user.entity.ts`):***
+    *   Se creó el archivo para la entidad `User` en la capa de **dominio**, representando el modelo de negocio de un usuario con sus propiedades y reglas.
+### **Fase 6: Refactorización a Arquitectura Limpia**
+$\small \text{ Fecha: 2025-OCT-04} $
+
+* ***1 - Reestructuración de Carpetas:*** Se ha refactorizado la estructura de carpetas del proyecto para alinearla con los principios de la Arquitectura Limpia. El objetivo es separar las responsabilidades en capas bien definidas: `domain`, `application`, `infrastructure` y `presentation`.
+
+    *   **`src/domain`**: Contiene la lógica de negocio pura y las entidades del dominio.
+        *   `dtos/`: Data Transfer Objects para validar y transportar datos.
+        *   `entities/`: Modelos de negocio de la aplicación.
+        *   `errors/`: Errores personalizados del dominio.
+        *   `repositories/`: Contratos (interfaces) de los repositorios.
+
+    *   **`src/application`**: Contiene los casos de uso de la aplicación, que orquestan la lógica del dominio.
+        *   `use-cases/`: Implementaciones de los casos de uso.
+
+    *   **`src/infrastructure`**: Contiene las implementaciones concretas de las abstracciones del dominio, como los repositorios y el acceso a la base de datos.
+        *   `datasources/`: Fuentes de datos (ej. Prisma).
+        *   `repositories/`: Implementaciones de los repositorios del dominio.
+
+    *   **`src/presentation`**: Contiene la capa de presentación, responsable de la interacción con el exterior (HTTP, WebSockets, etc.).
+        *   `controllers/`: Controladores que manejan las peticiones HTTP.
+        *   `routes/`: Definición de las rutas de la API.
+
+* ***2 - Movimiento de Archivos:*** Como parte de la reestructuración, se han movido los siguientes archivos a sus nuevas ubicaciones:
+
+    *   `register-user.usecase.ts` -> `src/application/use-cases/`
+    *   `register.user.dto.ts` -> `src/domain/dtos/auth/`
+    *   `user.entity.ts` -> `src/domain/entities/`
+    *   `custom.error.ts` -> `src/domain/errors/`
+    *   `user.repository.ts` -> `src/domain/repositories/`
+    *   `prisma-user-datasource.ts` -> `src/infrastructure/datasources/`
+    *   `auth_controller.ts` -> `src/presentation/controllers/`
+    *   `routes.ts` -> `src/presentation/routes/`
