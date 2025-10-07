@@ -5,5 +5,5 @@ import { UserEntity } from '../entities/user.entity.js';
 
 export abstract class UserRepository{
 abstract registerUser(registerUserDto:RegisterUserDto):Promise<UserEntity>;
-abstract findByEmail(email: string): Promise<UserEntity | null>;
+abstract findByEmail(email: string): Promise<boolean>;
 }
