@@ -39,6 +39,9 @@ model User {
   tokens AuthToken[]
 }
 
+//*TODO investigar como se guardan los datos de la hora si por la hora del usuario o una hora general donde esta el servidor o la API  
+
+
 
 // --- ENTIDAD PARA EL TOKEN DE AUTENTICACIÓN ---
 // Representa una sesión activa para un usuario.

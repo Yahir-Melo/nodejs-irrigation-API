@@ -17,7 +17,7 @@ export class RegisterUserUseCase {
     
     // 1. Validar si el email ya existe
     const existingUser = await this.userRepository.findByEmail(dto.email);
-    if (existingUser) { 
+    if (existingUser === true ) { 
       throw new Error('El correo electrónico ya está en uso.');
     }
 

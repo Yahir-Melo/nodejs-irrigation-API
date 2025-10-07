@@ -3,28 +3,26 @@
 import { PrismaClient } from "../../generated/prisma/index.js";
 import { UserEntity } from "../../domain/entities/user.entity.js";
 import { UserRepository } from "../../domain/repositories/user.repository.js";
-import { RegisterUserDto } from "../../domain/dtos/auth/register.user.dto.js";  
+import { RegisterUserDto } from "../../domain/dtos/auth/register.user.dto.js";
+
 
 const prisma = new PrismaClient();
 
 export class UserPrismaDatasource implements UserRepository {
 
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
+  async findByEmail(email: string): Promise<boolean> {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return null;
-
-    return new UserEntity(
-      user.id,
-      user.email,
-      user.passwordHash,
-      user.createdAt,
-      user.role as any,
-      user.verificatedEmail,
-      user.updatedAt,
-      user.name || undefined
-    );
+      
+    if(user){
+      return true;
+    }else{
+      return false;
+    }
   }
+
+        
+  
 
   // ESTE ES EL MÉTODO IMPORTANTE
   async registerUser(registerUserDto: RegisterUserDto): Promise<UserEntity> {
