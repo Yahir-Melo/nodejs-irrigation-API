@@ -1,43 +1,56 @@
+
 import { Router } from 'express';
 import { Authroutes } from './presentation/routes/routes.js';
-/**
- * @description Importaciones para el enrutador principal.
- * - `Router`: La clase de Express para crear enrutadores.
- * - `Authroutes`: La clase que contiene nuestro enrutador especializado en autenticación.
- *   Analogía: Estamos importando al "gerente del departamento de autenticación".
- */
 
 export class AppRoutes {
   static get routes(): Router {
     const router = Router();
-    /**
-     * @description Creación del enrutador principal de la aplicación.
-     * Analogía: Este es el "directorio" o la "recepción" del edificio entero.
-     */
-
-    // Rutas principales de la aplicación
     router.use('/api/auth', Authroutes.routes);
-    /**
-     * @description Montaje de las rutas especializadas.
-     * - `router.use('/api/auth', Authroutes.routes)`: Esta es la línea más importante.
-     * - Le dice al enrutador principal: "Crea una sección principal en la URL llamada '/api/auth',
-     *   y cualquier petición que llegue a esa sección, entrégasela al enrutador de `Authroutes` para que él la gestione".
-     *
-     * @analogy
-     *   Esto es como poner un letrero en la recepción del edificio que dice:
-     *   "Para asuntos de Autenticación (login, registro), vaya al Departamento de Seguridad en el ala `/api/auth`".
-     *   A partir de ahí, el gerente de ese departamento (`Authroutes`) se encarga.
-     */
-
     return router;
-    /**
-     * @description Se devuelve el enrutador principal ya configurado con todas las sub-rutas montadas.
-     * Este es el `Router` que `server.ts` finalmente utiliza.
-     */
   }
 }
+
 /**
+ * ==================================================================================================
+ *                                     DOCUMENTACIÓN DE RUTAS PRINCIPALES
+ * ==================================================================================================
+ *
+ * @file src/main_routes.ts
+ * @description Este archivo define la clase `AppRoutes`, responsable de centralizar y configurar
+ *              el enrutamiento principal de la aplicación Express.
+ *
+ *
+ * --------------------------------------------------------------------------------------------------
+ *                                          CLASE AppRoutes
+ * --------------------------------------------------------------------------------------------------
  * @class AppRoutes
- * @description La clase que define y agrupa todas las rutas principales de la aplicación.
- * - El método estático `get routes()` permite un acceso fácil y directo al enrutador configurado (`AppRoutes.routes`).
+ * @description Actúa como el contenedor principal para todas las rutas de la API. Su función
+ *              es agregar los diferentes módulos de enrutamiento (como autenticación, usuarios, etc.)
+ *              en un único enrutador que será utilizado por el servidor.
+ *
+ *
+ * --------------------------------------------------------------------------------------------------
+ *                                     MÉTODO ESTÁTICO `get routes`
+ * --------------------------------------------------------------------------------------------------
+ * @method get routes
+ * @description Este es un método estático que, al ser invocado, devuelve una instancia del
+ *              enrutador de Express (`Router`) completamente configurada.
+ *
+ * @paso 1: Creación del Enrutador
+ *   - `const router = Router();`
+ *   - Se inicializa una nueva instancia del enrutador de Express. Este será el enrutador
+ *     principal que contendrá todas las demás rutas.
+ *
+ * @paso 2: Montaje de Sub-Rutas
+ *   - `router.use('/api/auth', Authroutes.routes);`
+ *   - Aquí es donde se conectan los enrutadores especializados. En este caso, le estamos diciendo
+ *     a la aplicación que cualquier petición que comience con el prefijo `/api/auth` debe ser
+ *     manejada por el enrutador definido en `Authroutes.routes`. Esto permite modularizar
+ *     la aplicación, manteniendo la lógica de autenticación separada.
+ *
+ * @paso 3: Retorno del Enrutador
+ *   - `return router;`
+ *   - Finalmente, el método devuelve el enrutador ya configurado con todas sus sub-rutas,
+ *     listo para ser utilizado por la instancia principal del servidor Express.
+ *
  */

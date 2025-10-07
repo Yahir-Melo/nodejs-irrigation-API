@@ -1,64 +1,83 @@
+
 import { Router } from "express";
 import { AuthController } from "../controllers/auth_controller.js";
-
 import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
 import { UserPrismaDatasource } from "../../infrastructure/datasources/prisma-user-datasource.js";
-/*
- * @description Importaciones necesarias para definir las rutas de autenticación.
- * - `Router`: Es una clase de Express que permite crear manejadores de rutas modulares y montables.
- *   Analogía: Es un "sub-gerente" que se especializa en una sección del restaurante (ej: solo los postres).
- * - `AuthController`: Es la clase que contiene la lógica de negocio para cada ruta (qué hacer al registrar, loguear, etc.).
- *   Analogía: Es el "chef de repostería" que sabe preparar cada postre del menú.
- */
 
 export class Authroutes {
+  
   static get routes(): Router {
     const router = Router();
-    /**
-     * @description Creación de una instancia del Router.
-     * - `const router = Router()`: Aquí se crea el "organizador" o "sub-gerente" que agrupará todas las rutas de autenticación.
-     */
-
-    // --- INYECCIÓN DE DEPENDENCIAS ---
-    // 1. Crear una instancia del repositorio de datos.
-    const userRepository = new UserPrismaDatasource();
     
-    // 2. Crear una instancia del caso de uso, inyectándole el repositorio.
+    // --- INYECCIÓN DE DEPENDENCIAS ---
+    const userRepository = new UserPrismaDatasource();
     const registerUseCase = new RegisterUserUseCase(userRepository);
-
-    // 3. Crear una instancia del controlador, inyectándole el caso de uso.
     const controller = new AuthController(registerUseCase);
-    /**
-     * @description Creación de una instancia del controlador.
-     * - Se crea un objeto `controller` a partir de la clase `AuthController`.
-     * - Este objeto nos da acceso a los métodos que ejecutarán la lógica para cada ruta (ej: `controller.loginUser`).
-     */
 
-    // Definir las rutas
-    router.post('/login', controller.loginUser);
+    // --- DEFINICIÓN DE RUTAS ---
+    router.post('/login', AuthController.loginUser);
     router.post('/register', controller.registerUser);
     router.get('/validate-email/:token', controller.validateEmail);
-    /**
-     * @description Definición de las rutas de autenticación.
-     * - Cada línea asocia una ruta (URL) y un método HTTP (POST, GET) con un método específico del controlador.
-     * - `POST /login`: Cuando alguien haga una petición POST a esta URL, se ejecutará el método `loginUser` del controlador.
-     *   Analogía: Cuando un cliente pide "Pastel de Chocolate" (POST a /login), el chef de repostería (`controller`) prepara la receta `loginUser`.
-     * - `POST /register`: Similar al anterior, pero para registrar un nuevo usuario.
-     * - `GET /validate-email/:token`: Esta ruta captura un valor dinámico de la URL (el `token`).
-     *   Analogía: Es como pedir un "postre personalizado" (GET a /validate-email/) con un ingrediente especial (`:token`).
-     */
 
     return router;
-    /**
-     * @description Devolución del enrutador configurado.
-     * - La función `get routes()` devuelve el objeto `router` con todas las rutas ya definidas y listas para ser usadas
-     *   por el servidor principal en `server.ts`.
-     */
   }
 }
+
 /**
+ * ==================================================================================================
+ *                                     DOCUMENTACIÓN DE RUTAS DE AUTENTICACIÓN
+ * ==================================================================================================
+ *
+ * @file src/presentation/routes/routes.ts
+ * @description Este archivo define la clase `Authroutes`, que encapsula todas las rutas
+ *              relacionadas con la autenticación de usuarios.
+ *
+ *
+ * --------------------------------------------------------------------------------------------------
+ *                                          CLASE Authroutes
+ * --------------------------------------------------------------------------------------------------
  * @class Authroutes
- * @description Clase que agrupa y expone las rutas relacionadas con la autenticación.
- * - Utiliza un método estático `get routes()` para que no sea necesario crear una instancia de la clase para obtener el enrutador.
- *   Se accede directamente con `Authroutes.routes`.
+ * @description Su única responsabilidad es configurar y devolver un enrutador de Express
+ *              especializado en la gestión de la autenticación. Utiliza un método estático
+ *              para facilitar el acceso al enrutador sin necesidad de instanciar la clase.
+ *
+ *
+ * --------------------------------------------------------------------------------------------------
+ *                                     MÉTODO ESTÁTICO `get routes`
+ * --------------------------------------------------------------------------------------------------
+ * @method get routes
+ * @description Configura y devuelve el enrutador de autenticación.
+ *
+ * @paso 1: Creación del Enrutador
+ *   - `const router = Router();`
+ *   - Se crea una instancia de `Router` de Express para agrupar las rutas de este módulo.
+ *
+ * @paso 2: Inyección de Dependencias (DI)
+ *   - `const userRepository = new UserPrismaDatasource();`
+ *     - Se crea una instancia del `UserPrismaDatasource`, que es la implementación concreta
+ *       de la fuente de datos para usuarios, utilizando Prisma.
+ *   - `const registerUseCase = new RegisterUserUseCase(userRepository);`
+ *     - Se crea una instancia del caso de uso para registrar usuarios. Se le "inyecta"
+ *       el `userRepository`, lo que significa que el caso de uso utilizará esta fuente
+ *       de datos para interactuar con la base de datos.
+ *   - `const controller = new AuthController(registerUseCase);`
+ *     - Se crea la instancia del `AuthController` y se le inyecta el caso de uso.
+ *       El controlador orquesta el flujo de datos, recibiendo peticiones HTTP y
+ *       llamando a los casos de uso correspondientes para ejecutar la lógica de negocio.
+ *
+ * @paso 3: Definición de Rutas
+ *   - Se asocian las rutas y los verbos HTTP a los métodos del controlador.
+ *   - `router.post('/login', controller.loginUser);`
+ *     - Peticiones `POST` a `/login` son manejadas por el método `loginUser` del controlador.
+ *   - `router.post('/register', controller.registerUser);`
+ *     - Peticiones `POST` a `/register` son manejadas por el método `registerUser`.
+ *   - `router.get('/validate-email/:token', controller.validateEmail);`
+ *     - Peticiones `GET` a `/validate-email/` con un token dinámico son manejadas por
+ *       el método `validateEmail`.
+ *
+ * @paso 4: Retorno del Enrutador
+ *   - `return router;`
+ *   - Se devuelve el enrutador configurado para que `main_routes.ts` pueda montarlo
+ *     en la ruta principal `/api/auth`.
+ *
  */
