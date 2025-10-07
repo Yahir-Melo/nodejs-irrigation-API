@@ -5,6 +5,8 @@ import { RegisterUserUseCase } from "../../application/use-cases/register-user.u
 
 
 export class AuthController{
+ 
+  
   
 
 
@@ -43,7 +45,9 @@ registerUser = async (req: Request, res: Response) => {
 };
 
 
+ 
 
+  
   loginUser =async (req:Request,res:Response)=>{
 
   }
