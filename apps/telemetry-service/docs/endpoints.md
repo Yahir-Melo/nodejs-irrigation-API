@@ -1,6 +1,7 @@
 # Endpoints de la API
 
-Este documento detalla los endpoints disponibles en la API de telemetría.
+Este documento detalla los endpoints disponibles en el microservicio de Autenticación.
+
 
 ## Autenticación
 
