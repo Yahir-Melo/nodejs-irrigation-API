@@ -1,8 +1,8 @@
-
 import { Router } from "express";
 import { AuthController } from "../controllers/auth_controller.js";
 import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
 import { UserPrismaDatasource } from "../../infrastructure/datasources/prisma-user-datasource.js";
+import { LoginUserUseCase } from "../../application/use-cases/login-user.usecase.js";
 
 export class Authroutes {
   
@@ -11,15 +11,23 @@ export class Authroutes {
     
     // --- INYECCIÓN DE DEPENDENCIAS ---
     const userRepository = new UserPrismaDatasource();
+
+    // Creas una instancia de CADA caso de uso que necesites
     const registerUseCase = new RegisterUserUseCase(userRepository);
-    const controller = new AuthController(registerUseCase);
+    const loginUseCase = new LoginUserUseCase(userRepository); // <--- CREA LA INSTANCIA
+
+    // Inyectas AMBOS casos de uso en el ÚNICO controlador
+    const controller = new AuthController(registerUseCase, loginUseCase);
+
 
     // --- DEFINICIÓN DE RUTAS ---
-    router.post('/login', AuthController.loginUser);
+    // Ahora el controlador tiene todo lo que necesita para todas las rutas
     router.post('/register', controller.registerUser);
-    router.get('/validate-email/:token', controller.validateEmail);
+    router.post('/login', controller.loginUser);
+    router.get('/validate-email/:token', controller.validateEmail); // (Este necesitará su propio caso de uso también)
 
     return router;
+    
   }
 }
 
