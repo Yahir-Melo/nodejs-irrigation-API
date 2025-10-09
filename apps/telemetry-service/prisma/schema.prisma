@@ -36,7 +36,6 @@ model User {
   role      Role     @default(USER)
   verificatedEmail Boolean @default(false)
   // Relación: Un usuario puede tener muchos tokens de autenticación.
-  tokens AuthToken[]
 }
 
 //*TODO investigar como se guardan los datos de la hora si por la hora del usuario o una hora general donde esta el servidor o la API  
@@ -45,16 +44,3 @@ model User {
 
 // --- ENTIDAD PARA EL TOKEN DE AUTENTICACIÓN ---
 // Representa una sesión activa para un usuario.
-model AuthToken {
-  id          String      @id @default(uuid())
-  token       String   @unique // El token en sí (ej. un JWT). Se hace único para búsqueda rápida.
-  userId      String      // La clave foránea que conecta este token con un usuario.
-  expiresAt   DateTime // Fecha de expiración del token para invalidarlo automáticamente.
-  createdAt   DateTime @default(now())
-
-  // Relación: Cada token pertenece a un único usuario.
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Creamos un índice en userId para acelerar las búsquedas de tokens por usuario.
-  @@index([userId])
-}
