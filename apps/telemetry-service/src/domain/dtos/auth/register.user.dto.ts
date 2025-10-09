@@ -16,14 +16,15 @@ export class RegisterUserDto{
  static create(object:{[key:string]:any}):[string?,RegisterUserDto?]{
 
   const{name,email,password}=object;
-  
+  const emailEnMinusculas = email.toLowerCase(email);
+
   if(!name) return ['Missing name'];
-  if(!email) return ['Missing email'];
+  if(!emailEnMinusculas) return ['Missing email'];
   if(!password) return ['Missing password'];
   if(!regularExps.email.test(email)) return ['Invalid email'];
   if(password.length<6) return ['Password must be at least 6 characters'];
   
-  return [,new RegisterUserDto(name,email,password)];
+  return [,new RegisterUserDto(name,emailEnMinusculas,password)];
 
      
   
