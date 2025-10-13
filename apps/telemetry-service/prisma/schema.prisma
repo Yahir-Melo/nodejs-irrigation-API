@@ -27,15 +27,20 @@ enum Role{
 // --- ENTIDAD DE USUARIO ---
 // Almacena la información fundamental del usuario.
 model User {
-  id        String       @id @default(uuid())
-  email     String   @unique // El email es único para cada usuario y se usa para el login.
-  name      String?  // Nombre opcional del usuario.
-  passwordHash  String   // ¡IMPORTANTE! Aquí se guarda la contraseña HASHEADA, no en texto plano.
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  passwordHash  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      Role     @default(USER)
-  verificatedEmail Boolean @default(false)
-  // Relación: Un usuario puede tener muchos tokens de autenticación.
+
+  // --- Campos de Verificación ---
+  emailVerified              Boolean  @default(false)      // (Pequeño cambio de nombre a un inglés más común)
+  verificationToken          String?  @unique             // 1. El token específico para verificar email
+  verificationTokenExpires   DateTime?                     // 2. La fecha en que ese token expira
+  
+  // Ya no necesitas el campo genérico "token"
 }
 
 //*TODO investigar como se guardan los datos de la hora si por la hora del usuario o una hora general donde esta el servidor o la API  
