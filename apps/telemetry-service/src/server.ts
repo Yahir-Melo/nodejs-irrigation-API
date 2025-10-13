@@ -1,5 +1,4 @@
 import express, { Router } from 'express';
-import path from 'path';
 
 interface Options {
   port: number;
@@ -23,41 +22,25 @@ export class Server {
   }
 
   async start() {
-    // Middlewares
+
     this.app.use(express.json()); 
     this.app.use(express.urlencoded({ extended: true })); 
 
-    // Public folder
     this.app.use(express.static(this.publicPath));
 
-    // Routes
     this.app.use(this.routes);
-
-    // SPA Fallback (optional)
-    /*
-    this.app.get('*', (req, res) => {
-      const indexPath = path.join( __dirname + `../../../${ this.publicPath }/index.html` );
-      res.sendFile(indexPath);
+    
+    this.serverListener = this.app.listen(this.port, () => {
+      console.log(`✅ Servidor escuchando en el puerto ${this.port}`);
     });
-    */
-
-    // Start server
-    this.serverListener = this.app.listen(this.port);
 
     this.serverListener.on('error', (error: any) => {
       if (error.code === 'EADDRINUSE') {
-        console.error(`Error: El puerto ${this.port} ya está en uso.`);
-        process.exit(1);
+        console.error(`❌ Error: El puerto ${this.port} ya está en uso.`);
       } else {
-        console.error('Ocurrió un error inesperado al iniciar el servidor.');
-        console.error(`El código del error es: ${error.code}`);
-        console.error('Detalles completos del error:', error);
-        process.exit(1);
+        console.error(`❌ Error inesperado en el servidor: ${error.code}`, error);
       }
-    });
-
-    this.serverListener.on('listening',() => {
-        console.log(`Servidor escuchando en el puerto ${this.port}`);
+      process.exit(1);
     });
   }
 
@@ -129,17 +112,14 @@ export class Server {
  *     de la aplicación. Todas las peticiones a la API pasarán por este enrutador.
  *
  * @paso 4: Inicio del Servidor y Manejo de Eventos
- *   - `this.app.listen(this.port)`: Pone al servidor a escuchar en el puerto especificado.
+ *   - `this.app.listen(this.port, ...)`: Pone al servidor a escuchar en el puerto especificado y
+ *     ejecuta un callback que confirma el inicio exitoso.
  *   - `serverListener.on('error', ...)`: Captura errores que puedan ocurrir al iniciar el
  *     servidor, como un puerto que ya está en uso (`EADDRINUSE`), y termina el proceso
- *     de forma controlada si es necesario.
- *   - `serverListener.on('listening', ...)`: Muestra un mensaje en consola cuando el servidor
- *     se ha iniciado correctamente y está listo para recibir peticiones.
+ *     de forma controlada mostrando un mensaje claro.
  *
- * @paso 5: Fallback para Single Page Applications (SPA) - (Opcional, comentado)
- *   - El bloque `this.app.get('*', ...)` está diseñado para soportar SPAs (React, Angular, Vue).
- *     Si una petición no coincide con ninguna ruta de la API, se le entrega el `index.html`.
- *     Esto permite que el framework de frontend maneje el enrutamiento en el lado del cliente.
+ * @analogy El método `start` es como el director de una orquesta. Llama a cada sección (middlewares,
+ *          rutas, etc.) en el orden correcto para que la sinfonía (la aplicación) suene como debe.
  *
  *
  * --------------------------------------------------------------------------------------------------
