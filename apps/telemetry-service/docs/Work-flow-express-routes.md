@@ -1,4 +1,4 @@
-# 🌊 Flujo de Funcionamiento de la API 🌊
+# 🌊 Flujo de Funcionamiento de la API 
 
 ¡Bienvenido! Esta documentación explica el viaje que realiza una petición a través de nuestra API, desde que llega al servidor hasta que se devuelve una respuesta usando ***Clean Architecture & Clean Code*** ¡Vamos a sumergirnos!
 

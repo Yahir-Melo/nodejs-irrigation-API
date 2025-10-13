@@ -360,3 +360,160 @@ Se implementa el núcleo de la Arquitectura Limpia, separando la lógica de nego
     *   Usa `prisma.user.create` para guardar el nuevo usuario en la base de datos PostgreSQL.
     *   Mapea el resultado de Prisma a una instancia de `UserEntity`.
 9.  **Retorno:** La `UserEntity` viaja de vuelta a través del caso de uso hasta el controlador, que finalmente envía la respuesta HTTP 201 al cliente.
+
+---
+
+### **Fase 5: Implementación del Endpoint de Login**
+$\small \text{ Fecha: 2025-OCT-09} $
+
+Se implementa la funcionalidad de autenticación de usuarios, permitiendo a los usuarios iniciar sesión y obtener un token de acceso (JWT) para futuras peticiones.
+
+*   **1 - Instalación de Dependencias para JWT:** 
+    Se instalaron las librerías `jsonwebtoken` para la generación y firma de tokens, y `bcryptjs` para la comparación de contraseñas.
+    ```bash
+    npm install jsonwebtoken bcryptjs
+    npm install -D @types/jsonwebtoken @types/bcryptjs
+    ```
+
+*   **2 - Creación del DTO de Login (`login.user.dto.ts`):** 
+    Se creó un DTO específico para validar los datos de entrada del endpoint de login, asegurando que el `email` y la `password` cumplan con el formato y las reglas requeridas.
+
+    **Ubicación:** `src/domain/dtos/auth/login.user.dto.ts`
+
+*   **3 - Extensión del Repositorio de Usuario:** 
+    Se actualizó el contrato `UserRepository` en el dominio para incluir dos nuevos métodos abstractos, necesarios para la lógica de login:
+    *   `verifyUserPassword(password: string, email: string): Promise<boolean>`: Para comparar la contraseña proporcionada con la almacenada.
+    *   `createTokenUser(loginUserDto: LoginUserDto): Promise<string>`: Para generar el token JWT si la autenticación es exitosa.
+
+    **Ubicación:** `src/domain/repositories/user.repository.ts`
+
+*   **4 - Implementación en el Datasource de Prisma:** 
+    La clase `UserPrismaDatasource` implementó los nuevos métodos del repositorio:
+    *   `verifyUserPassword`: Utiliza `bcrypt.compare` para verificar la contraseña de forma segura.
+    *   `createTokenUser`: Busca al usuario, y si la contraseña es correcta, genera un token JWT firmado con una clave secreta (`JWT_SECRET`) y una expiración de 7 días.
+
+    **Ubicación:** `src/infrastructure/datasources/prisma-user-datasource.ts`
+
+*   **5 - Creación del Caso de Uso de Login (`login-user.usecase.ts`):** 
+    Este caso de uso orquesta la lógica de negocio para el inicio de sesión:
+    1.  Verifica que el usuario exista en la base de datos usando `userRepository.findByEmail`.
+    2.  Compara las contraseñas usando `userRepository.verifyUserPassword`.
+    3.  Si las credenciales son válidas, solicita la creación del token llamando a `userRepository.createTokenUser`.
+
+    **Ubicación:** `src/application/use-cases/login-user.usecase.ts`
+
+*   **6 - Actualización del Controlador y Rutas:** 
+    *   Se inyectó el `LoginUserUseCase` en el `AuthController`.
+    *   Se implementó el método `loginUser` en el controlador, que recibe la petición, la valida con `LoginUserDto`, ejecuta el caso de uso y devuelve el token en la respuesta.
+    *   Se activó la ruta `POST /api/auth/login` en `presentation/routes/routes.ts`, asociándola con el método `loginUser` del controlador.
+
+#### **Flujo de Trabajo de una Petición de Login:**
+
+1.  **Llega una Petición:** Un cliente envía `email` y `password` a `POST /api/auth/login`.
+2.  **Enrutamiento:** La petición sigue el mismo flujo de enrutamiento que el registro, llegando finalmente al `AuthController`.
+3.  **Controlador (`loginUser`):**
+    *   Valida los datos de entrada con `LoginUserDto`.
+    *   Llama a `loginUserUseCase.execute()` con los datos validados.
+4.  **Caso de Uso (`execute`):**
+    *   Confirma que el email está registrado.
+    *   Verifica que la contraseña sea correcta.
+    *   Llama al repositorio para generar el token.
+5.  **Datasource (`createTokenUser`):**
+    *   Genera el token JWT con los datos del usuario (id, email, rol).
+6.  **Respuesta:** El token viaja de vuelta a través de las capas hasta el controlador, que lo envía al cliente en una respuesta `200 OK`.
+
+---
+
+### **Fase 6: Verificación de Correo Electrónico**
+$\small \text{ Fecha: 2025-OCT-12} $
+
+Se implementa el flujo para que un usuario pueda verificar su cuenta de correo electrónico a través de un enlace único enviado a su email después del registro.
+
+*   **1 - Creación de la Ruta de Verificación:** 
+    Se define un nuevo endpoint `GET` que recibe un token como parámetro en la URL para validar al usuario.
+
+    **Ubicación:** `src/presentation/routes/routes.ts`
+    ```typescript
+    router.get('/validate-email/:token', controller.validateEmail);
+    ```
+
+*   **2 - Creación del Caso de Uso (`validate-email.usecase.ts`):** 
+    Este caso de uso contiene la lógica para validar el token y marcar el correo del usuario como verificado. No se necesita un DTO ya que el único dato de entrada es el token de la URL.
+
+    **Ubicación:** `src/application/use-cases/validate-email.usecase.ts`
+    ```typescript
+    // Interfaces de entrada y salida
+    export interface ValidateEmailUseCaseInput {
+      token: string;
+    }
+    export interface ValidateEmailUseCaseOutput {
+      success: boolean;
+      message: string;
+    }
+
+    // Clase del caso de uso
+    export class ValidateEmailUseCase {
+      constructor(
+        private readonly userRepository: UserRepository 
+      ) {}
+
+      async execute(input: ValidateEmailUseCaseInput): Promise<ValidateEmailUseCaseOutput> {
+        // Lógica de validación...
+      }
+    }
+    ```
+
+*   **3 - Extensión del Repositorio de Usuario:** 
+    Se añaden tres nuevos métodos abstractos al `UserRepository` para manejar la lógica de verificación.
+
+    **Ubicación:** `src/domain/repositories/user.repository.ts`
+    ```typescript
+    abstract findVerificationToken(token:string):Promise<UserEntity | null>
+    abstract verifyEmail(userId:string):Promise<UserEntity>
+    abstract checkVerifyEmail(userId:string):Promise<boolean>
+    ```
+
+*   **4 - Implementación en el Datasource:** 
+    La clase `UserPrismaDatasource` implementa los nuevos métodos para interactuar con la base de datos.
+    *   `findVerificationToken`: Busca un usuario por su token de verificación.
+    *   `verifyEmail`: Actualiza el estado del usuario a "verificado".
+    *   `checkVerifyEmail`: Comprueba si el correo de un usuario ya ha sido verificado.
+
+*   **5 - Integración con el Registro de Usuario (`register-user.usecase.ts`):** 
+    Después de crear un nuevo usuario, se instancia un `EmailService` y se le instruye enviar un correo de verificación.
+
+    **Ubicación:** `src/application/use-cases/register-user.usecase.ts`
+    ```typescript
+    // ... después de crear newUser
+    const emailService = new EmailService();
+    await emailService.sendEmailWithValidateAccount(newUser.email, verificationLink, newUser.name || '');
+    ```
+
+*   **6 - Servicio de Correo (`email.service.ts`):** 
+    Se crea una clase `EmailService` dedicada a enviar correos. El método `sendEmailWithValidateAccount` construye y envía un email con un botón que contiene el enlace de verificación (`GET /api/auth/validate-email/:token`).
+
+*   **7 - Validación en el Login (`login-user.usecase.ts`):** 
+    Se añade una comprobación al inicio del flujo de login para asegurar que solo los usuarios con correo verificado puedan iniciar sesión.
+
+    **Ubicación:** `src/application/use-cases/login-user.usecase.ts`
+    ```typescript
+    // Al inicio del método execute()
+    const emailIsVerified = await this.userRepository.checkVerifyEmail(dto.email);
+    if (!emailIsVerified) {  
+      throw new Error('Correo electrónico no validado'); 
+    }
+    ```
+
+#### **Flujo de Trabajo de Verificación de Correo:**
+
+1.  **Registro:** Un usuario se registra (`POST /api/auth/register`).
+2.  **Envío de Correo:** El `register-user.usecase.ts` llama al `EmailService` para enviar un correo al nuevo usuario. El correo contiene un enlace único (ej: `https://api.example.com/api/auth/validate-email/some-jwt-token`).
+3.  **Click en el Enlace:** El usuario hace clic en el enlace de verificación.
+4.  **Petición GET:** El navegador realiza una petición `GET` al endpoint `/api/auth/validate-email/:token`.
+5.  **Controlador (`validateEmail`):** El `AuthController` recibe la petición y extrae el token.
+6.  **Caso de Uso (`execute`):** El controlador invoca al `validate-email.usecase.ts`.
+    *   El caso de uso utiliza `userRepository.findVerificationToken` para encontrar al usuario asociado al token.
+    *   Verifica que el token no haya expirado y que el usuario no esté ya verificado.
+    *   Llama a `userRepository.verifyEmail` para actualizar el estado del usuario en la base de datos.
+7.  **Respuesta:** El servidor responde con un mensaje de éxito, y el usuario ya puede iniciar sesión.
+8.  **Intento de Login:** Cuando el usuario intenta iniciar sesión, el `login-user.usecase.ts` primero comprueba con `checkVerifyEmail` si su cuenta está verificada antes de proceder.
