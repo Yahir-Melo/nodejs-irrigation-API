@@ -5,12 +5,15 @@ import { RegisterUserDto } from '../../domain/dtos/auth/register.user.dto.js';
 import { UserEntity } from '../../domain/entities/user.entity.js';
 import { UserRepository } from '../../domain/repositories/user.repository.js';
 import bcrypt from 'bcryptjs';
+import { EmailService } from '../../presentation/email/email.service.js';
 
 export class RegisterUserUseCase {
 
   // Inyectamos la dependencia del Repositorio (no de Prisma directamente)
   constructor(
+
     private readonly userRepository: UserRepository
+
   ) {}
 
   async execute(dto: RegisterUserDto): Promise<UserEntity> {
@@ -32,6 +35,14 @@ export class RegisterUserUseCase {
     // El repositorio se encargará de crear y guardar la entidad
     const newUser = await this.userRepository.registerUser(dto);
 
+    const verificationLink = `http://localhost:5900/api/auth/validate-email/${newUser.verificationToken}`;
+    
+
+    const emailService =new EmailService();
+    await emailService.sendEmailWithValidateAccount(newUser.email, verificationLink,newUser.name || '');
+
+
     return newUser;
+    
   }
 }

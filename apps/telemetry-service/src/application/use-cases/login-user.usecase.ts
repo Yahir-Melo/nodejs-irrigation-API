@@ -24,6 +24,12 @@ export class LoginUserUseCase {
       throw new Error('Correo electrónico no registrado');
     }
 
+    //validar si esta verificado el correo
+    const emailIsVerified = await this.userRepository.checkVerifyEmail(dto.email);
+    if (!emailIsVerified) { 
+      throw new Error('Correo electrónico no validado');
+    }
+
     // 2. Comparar la contraseña
 
    const verificatePassword = await this.userRepository.verifyUserPassword(dto.password,dto.email);
