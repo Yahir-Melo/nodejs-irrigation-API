@@ -15,7 +15,7 @@ $\small \text{ Fecha: 2025-SEP-23} $
 ### **🔌 Instalacion y configuracion de ORM-Prisma**  
 
 *   **1 - Instalacion de Prisma CLI:** `npm install prisma --save-dev`.
-*   **2 - Inicialización de Prisma:** Se ejecutó `npx prisma init --datasource-provider PostgreSQL` para crear la carpeta `prisma` y el archivo `.env`.
+*   **2 - Inicialización de Prisma:** Se ejecutió `npx prisma init --datasource-provider PostgreSQL` para crear la carpeta `prisma` y el archivo `.env`.
 *   **3 - Definición del Esquema:** Se definieron los modelos `User` y `AuthToken` en `prisma/schema.prisma`.
 *   **4 - Migración de la Base de Datos:** Se ejecutó `npx prisma migrate dev` para aplicar el esquema a la base de datos.
 
@@ -517,3 +517,78 @@ Se implementa el flujo para que un usuario pueda verificar su cuenta de correo e
     *   Llama a `userRepository.verifyEmail` para actualizar el estado del usuario en la base de datos.
 7.  **Respuesta:** El servidor responde con un mensaje de éxito, y el usuario ya puede iniciar sesión.
 8.  **Intento de Login:** Cuando el usuario intenta iniciar sesión, el `login-user.usecase.ts` primero comprueba con `checkVerifyEmail` si su cuenta está verificada antes de proceder.
+
+---
+
+### **Fase 7: Mejoras de Seguridad - Rate Limiting**
+$\small \text{ Fecha: 2025-OCT-13} $
+
+Para proteger la API contra ataques de fuerza bruta y abuso, se implementó un mecanismo de limitación de peticiones (rate limiting) en los endpoints más sensibles.
+
+*   **1 - Instalación de Dependencias:** 
+    Se instaló la librería `express-rate-limit` y sus tipos de TypeScript.
+    ```bash
+    # 1. Instala la librería principal
+    npm install express-rate-limit
+
+    # 2. Instala los tipos como una dependencia de desarrollo
+    npm install --save-dev @types/express-rate-limit
+    ```
+
+*   **2 - Creación del Middleware de Rate Limiting:** 
+    Se creó un archivo dedicado para configurar las reglas de limitación. Se definieron dos limitadores: uno más estricto para el login y otro más flexible para el registro.
+
+    **Ubicación:** `src/presentation/middlewares/rateLimiter.ts`
+    ```typescript
+    import rateLimit from 'express-rate-limit';
+
+    // Middleware para la ruta de Login: Más estricto para prevenir fuerza bruta.
+    export const loginLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // Ventana de tiempo de 15 minutos
+        max: 5, // Límite de 5 peticiones por IP durante la ventana de tiempo
+        message: {
+            status: 429,
+            message: 'Demasiados intentos de inicio de sesión desde esta IP. Por favor, inténtelo de nuevo después de 15 minutos.'
+        },
+        standardHeaders: true, // Devuelve información del límite en las cabeceras `RateLimit-*`
+        legacyHeaders: false, // Deshabilita las cabeceras `X-RateLimit-*` (obsoleto)
+    });
+
+    // Middleware para la ruta de Registro: Un poco más flexible.
+    export const registerLimiter = rateLimit({
+        windowMs: 60 * 60 * 1000, // Ventana de tiempo de 1 hora
+        max: 10, // Límite de 10 peticiones por IP
+        message: {
+            status: 429,
+            message: 'Demasiadas cuentas creadas desde esta IP. Por favor, inténtelo de nuevo después de una hora.'
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
+    ```
+
+*   **3 - Aplicación del Middleware en las Rutas:** 
+    Se importaron y aplicaron los middlewares en el archivo de rutas, colocándolos antes de los métodos del controlador para proteger los endpoints correspondientes.
+
+    **Ubicación:** `src/presentation/routes/routes.ts`
+    ```typescript
+    // ... otras importaciones
+    import { loginLimiter, registerLimiter } from '../middlewares/rateLimiter.js';
+
+    // ...
+    
+    // Se aplican los middlewares a las rutas específicas
+    router.post('/register', registerLimiter, controller.registerUser);
+    router.post('/login', loginLimiter, controller.loginUser);
+    
+    // ...
+    ```
+
+#### **Flujo de Trabajo del Rate Limiter:**
+
+1.  **Llega una Petición:** Un cliente envía una petición `POST` a `/api/auth/login` o `/api/auth/register`.
+2.  **Middleware Actúa:** Antes de que la petición llegue al controlador, `express-rate-limit` la intercepta.
+3.  **Verificación:** El middleware comprueba cuántas peticiones ha realizado esa dirección IP en la ventana de tiempo definida.
+4.  **Decisión:**
+    *   **Si se excede el límite:** El middleware bloquea la petición y responde directamente con un error `429 Too Many Requests`. El código del controlador nunca se ejecuta.
+    *   **Si no se excede el límite:** El middleware permite que la petición continúe su flujo normal hacia el controlador.
