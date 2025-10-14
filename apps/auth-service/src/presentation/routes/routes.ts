@@ -4,6 +4,7 @@ import { RegisterUserUseCase } from "../../application/use-cases/register-user.u
 import { UserPrismaDatasource } from "../../infrastructure/datasources/prisma-user-datasource.js";
 import { LoginUserUseCase } from "../../application/use-cases/login-user.usecase.js";
 import { ValidateEmailUseCase } from "../../application/use-cases/validate-email.usecase.js";
+import { loginLimiter, registerLimiter } from "../middlewares/rateLimiter.js";
 
 export class Authroutes {
   
@@ -18,8 +19,8 @@ export class Authroutes {
 
     const controller = new AuthController(registerUseCase, loginUseCase, validateEmailUseCase);
 
-    router.post('/register', controller.registerUser);
-    router.post('/login', controller.loginUser);
+    router.post('/register', registerLimiter,controller.registerUser);
+    router.post('/login', loginLimiter,controller.loginUser);
     router.get('/validate-email/:token', controller.validateEmail);
     
     return router;
