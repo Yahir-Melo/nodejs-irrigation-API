@@ -5,7 +5,6 @@ import { UserPrismaDatasource } from "../../infrastructure/datasources/prisma-us
 import { LoginUserUseCase } from "../../application/use-cases/login-user.usecase.js";
 import { ValidateEmailUseCase } from "../../application/use-cases/validate-email.usecase.js";
 
-
 export class Authroutes {
   
   static get routes(): Router {
