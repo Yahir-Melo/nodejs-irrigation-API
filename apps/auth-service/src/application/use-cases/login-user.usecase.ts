@@ -1,47 +1,65 @@
+// src/application/use-cases/login-user.usecase.ts
 
-import bcrypt from 'bcryptjs';
-
-
-// application/use-cases/register-user.use-case.ts
-import { LoginUserDto } from '../../domain/dtos/auth/login.user.dto.js';
-import { UserEntity } from '../../domain/entities/user.entity.js';
+import { LoginUserDto } from '../dtos/auth/login.user.dto.js';
 import { UserRepository } from '../../domain/repositories/user.repository.js';
+import { CustomError } from '../../domain/errors/custom.error.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
+// NUEVO: Define un DTO de respuesta para el login.
+export interface LoginUserResponseDto {
+  token: string;
+  user: {
+    id: string;
+    name?: string;
+    email: string;
+  };
+}
 
-
+/**
+ * REFACTORIZADO:
+ * El Caso de Uso ahora es responsable de la lógica de autenticación.
+ */
 export class LoginUserUseCase {
 
-  // Inyectamos la dependencia del Repositorio (no de Prisma directamente)
   constructor(
     private readonly userRepository: UserRepository
   ) {}
 
-  async execute(dto: LoginUserDto): Promise<string> {
+  async execute(dto: LoginUserDto): Promise<LoginUserResponseDto> {
     
-    // 1. Validar si el email ya existe
-    const existingUser = await this.userRepository.findByEmail(dto.email);
-    if (!existingUser === true ) { 
-      throw new Error('Correo electrónico no registrado');
+    // 1. Buscar al usuario por su email usando el repositorio limpio.
+    const user = await this.userRepository.findByEmail(dto.email);
+    if (!user) { 
+      throw CustomError.unauthorized('Credenciales inválidas.'); // Error genérico por seguridad
     }
 
-    //validar si esta verificado el correo
-    const emailIsVerified = await this.userRepository.checkVerifyEmail(dto.email);
-    if (!emailIsVerified) { 
-      throw new Error('Correo electrónico no validado');
+    // 2. Verificar si el correo está verificado directamente en la entidad.
+    if (!user.emailVerified) { 
+      throw CustomError.unauthorized('Correo electrónico no ha sido validado.');
     }
 
-    // 2. Comparar la contraseña
-
-   const verificatePassword = await this.userRepository.verifyUserPassword(dto.password,dto.email);
-    if (!verificatePassword) {
-    throw new Error('Contraseña incorrecta'); 
-      
+    // 3. Comparar la contraseña aquí, en el caso de uso.
+    const isPasswordCorrect = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!isPasswordCorrect) {
+      throw CustomError.unauthorized('Credenciales inválidas.'); 
     }
 
-    const token = await this.userRepository.createTokenUser(dto);
+    // 4. Generar el token de sesión JWT aquí.
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "mi_clave_super_segura",
+      { expiresIn: "7d" }
+    );
 
-
-    return token;
-
+    // 5. Mapear la entidad a un DTO de respuesta seguro.
+    return {
+      token,
+      user: {
+        id: user.id! || '',
+        name: user.name || '',
+        email: user.email,
+      }
+    };
   }
 }

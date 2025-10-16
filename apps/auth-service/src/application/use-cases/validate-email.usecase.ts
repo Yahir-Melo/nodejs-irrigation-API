@@ -1,46 +1,54 @@
+// src/application/use-cases/validate-email.usecase.ts
+
 import { CustomError } from "../../domain/errors/custom.error.js";
 import type { UserRepository } from "../../domain/repositories/user.repository.js";
 
-// Interfaz para la entrada del caso de uso
+// Interfaces (sin cambios)
 export interface ValidateEmailUseCaseInput {
   token: string;
 }
 
-// Interfaz para la salida del caso de uso
 export interface ValidateEmailUseCaseOutput {
   success: boolean;
   message: string;
 }
 
+/**
+ * REFACTORIZADO:
+ * El único cambio es usar el método genérico 'save' para persistir los cambios.
+ */
 export class ValidateEmailUseCase {
   
   constructor(
-    // Inyectamos el repositorio para poder hablar con la base de datos
     private readonly userRepository: UserRepository 
   ) {}
 
   async execute(input: ValidateEmailUseCaseInput): Promise<ValidateEmailUseCaseOutput> {
     
-    // 1. Buscar al usuario por el token de verificación usando el repositorio
-    const user = await this.userRepository.findVerificationToken(input.token);
+    // 1. Buscar al usuario por el token (sin cambios, ya usaba un método correcto).
+    const user = await this.userRepository.findByVerificationToken(input.token);
 
-    // 2. Si no se encuentra un usuario, el token es inválido
     if (!user) {
       throw CustomError.badRequest("Token de verificación inválido.");
     }
 
-    // 3. Opcional pero recomendado: verificar si el token ha expirado
-    if (!user.verificationTokenExpires || user.verificationTokenExpires < new Date()) {
-      throw CustomError.badRequest("El token de verificación ha expirado. Por favor, solicita uno nuevo.");
+    // 2. Verificar si el token ha expirado (sin cambios).
+    if (user.verificationTokenExpires && user.verificationTokenExpires < new Date()) {
+      throw CustomError.badRequest("El token de verificación ha expirado.");
     }
     
-    // 4. Si el usuario ya está verificado, no hacemos nada más
+    // 3. Si el usuario ya está verificado (sin cambios).
     if (user.emailVerified) {
       return { success: true, message: "El email ya había sido verificado." };
     }
 
-    // 5. Si todo está en orden, actualizamos al usuario
-    await this.userRepository.verifyEmail(user.id);
+    // 4. Modificar la entidad en memoria.
+    user.emailVerified = true;
+    user.verificationToken = undefined; // Limpiar el token para invalidarlo.
+    user.verificationTokenExpires = undefined;
+
+    // 5. CAMBIO CLAVE: Usar el método 'save' para guardar la entidad actualizada.
+    await this.userRepository.save(user);
 
     return { success: true, message: "Email verificado correctamente." };
   }
