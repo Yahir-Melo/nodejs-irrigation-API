@@ -1,5 +1,5 @@
 // Define tu enum de roles como lo tienes
-enum Role {
+export enum Role {
     USER,
     ADMIN,
 }
@@ -7,14 +7,14 @@ enum Role {
 export class UserEntity {
 
   constructor(
-    public id: string,
+    public id: string | undefined,
     public email: string,
     public passwordHash: string,
     public createdAt: Date,
     public role: Role, // Nota: cambié "Role" a "role" para seguir la convención de minúsculas en propiedades
     public emailVerified: boolean,
+    public name: string,
     public updatedAt?: Date,
-    public name?: string,
     public verificationTokenExpires?: Date,
     public verificationToken?: string,
   ) {}
@@ -38,8 +38,8 @@ export class UserEntity {
       createdAt, 
       role, 
       emailVerified,
-      updatedAt,
       name,
+      updatedAt,
       verificationTokenExpires,
       verificationToken
     } = object;
@@ -71,8 +71,8 @@ export class UserEntity {
       createdAt,
       userRole, // Pasamos el valor del enum, no el string
       emailVerified,
-      updatedAt,
       name,
+      updatedAt,
       verificationTokenExpires,
       verificationToken
     );

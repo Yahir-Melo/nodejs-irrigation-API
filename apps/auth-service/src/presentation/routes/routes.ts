@@ -5,6 +5,7 @@ import { UserPrismaDatasource } from "../../infrastructure/datasources/prisma-us
 import { LoginUserUseCase } from "../../application/use-cases/login-user.usecase.js";
 import { ValidateEmailUseCase } from "../../application/use-cases/validate-email.usecase.js";
 import { loginLimiter, registerLimiter } from "../middlewares/rateLimiter.js";
+import { EmailService } from "../email/email.service.js";
 
 export class Authroutes {
   
@@ -12,8 +13,9 @@ export class Authroutes {
 
     const router = Router();
     const userRepository = new UserPrismaDatasource();
+    const emailService = new EmailService();
 
-    const registerUseCase = new RegisterUserUseCase(userRepository);
+    const registerUseCase = new RegisterUserUseCase(userRepository, emailService);
     const loginUseCase = new LoginUserUseCase(userRepository);
     const validateEmailUseCase = new ValidateEmailUseCase(userRepository);
 
