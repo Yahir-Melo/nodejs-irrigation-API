@@ -592,3 +592,66 @@ Para proteger la API contra ataques de fuerza bruta y abuso, se implementó un m
 4.  **Decisión:**
     *   **Si se excede el límite:** El middleware bloquea la petición y responde directamente con un error `429 Too Many Requests`. El código del controlador nunca se ejecuta.
     *   **Si no se excede el límite:** El middleware permite que la petición continúe su flujo normal hacia el controlador.
+
+---
+
+### **Fase 8: Refactorización y Depuración del Flujo de Registro**
+$\small \text{ Fecha: 2025-OCT-15} $
+
+Durante las pruebas del flujo de registro, se encontraron una serie de errores en cascada que revelaron debilidades en la implementación inicial. Esta fase documenta la depuración y refactorización realizadas para robustecer el sistema y alinearlo más estrictamente con los principios de Arquitectura Limpia.
+
+*   **1 - Refactorización de la Capa de Dominio (`UserEntity`):**
+    *   **Problema:** La entidad de usuario (`UserEntity`) requería un `id` de tipo `string` en su constructor. Esto era incorrecto para usuarios nuevos que aún no han sido persistidos en la base de datos y, por lo tanto, no tienen un ID.
+    *   **Solución:** Se modificó la firma del constructor para que la propiedad `id` sea de tipo `string | undefined`. Esto permite representar de forma más precisa el estado de una entidad que aún no ha sido guardada.
+        ```typescript
+        // Antes
+        constructor(public id: string, ...)
+
+        // Después
+        constructor(public id: string | undefined, ...)
+        ```
+
+*   **2 - Refactorización Profunda de la Capa de Infraestructura (`UserPrismaDatasource`):**
+    Esta fue la capa que requirió los cambios más significativos para corregir errores y mejorar su robustez.
+    *   **a) Reemplazo de `upsert` por `create`/`update`:**
+        *   **Problema:** La lógica inicial usaba `prisma.user.upsert` para manejar tanto la creación como la actualización de usuarios. Esto causaba un error crítico al intentar crear un usuario nuevo, ya que se pasaba un `id` vacío (`''`), lo que corrompía el registro en la base de datos.
+        *   **Solución:** Se reemplazó `upsert` por una lógica condicional explícita. Si la `UserEntity` no tiene `id`, se usa `prisma.user.create`. Si tiene `id`, se usa `prisma.user.update`. Esto asegura que la base de datos genere los IDs correctamente.
+    *   **b) Mapeo de `Role` (Dominio a Prisma):**
+        *   **Problema:** La `UserEntity` del dominio utiliza un `enum` numérico para `Role` (ej. `Role.USER` es `0`), mientras que Prisma espera un `enum` de tipo `string` (ej. `'USER'`). Esto causaba un error de tipos al intentar guardar los datos.
+        *   **Solución:** Se implementó un mapeo explícito en el método `save` para convertir el rol del dominio al tipo que Prisma espera antes de enviarlo a la base de datos.
+            ```typescript
+            const data = {
+              // ...
+              role: user.role === DomainRole.ADMIN ? PrismaRole.ADMIN : PrismaRole.USER,
+              // ...
+            };
+            ```
+    *   **c) Manejo de Propiedades Opcionales (`exactOptionalPropertyTypes`):**
+        *   **Problema:** Al tener la opción `exactOptionalPropertyTypes` activa en `tsconfig.json`, pasar propiedades con valor `undefined` (como `name` si es opcional) a los métodos de Prisma causa un error de tipos.
+        *   **Solución:** Se utilizó el truco `JSON.parse(JSON.stringify(data))` para crear una copia del objeto de datos que elimina automáticamente cualquier propiedad cuyo valor sea `undefined`, asegurando la compatibilidad con Prisma.
+
+*   **3 - Correcciones en la Capa de Aplicación (`RegisterUserUseCase`):**
+    *   **Problema:** Se detectó un bug donde los argumentos `name` y `updatedAt` se pasaban en el orden incorrecto al constructor de `UserEntity`.
+    *   **Solución:** Se corrigió el orden de los argumentos, asegurando que el `name` del DTO se asigne a la propiedad `name` de la entidad y no a `updatedAt`.
+        ```typescript
+        // Antes
+        new UserEntity(..., false, dto.name, new Date(), ...)
+        // Después
+        new UserEntity(..., false, new Date(), dto.name, ...)
+        ```
+
+*   **4 - Corrección de Inyección de Dependencias (Capa de Presentación):**
+    *   **Problema:** El constructor de `RegisterUserUseCase` requiere dos dependencias: `UserRepository` y `EmailService`. En `presentation/routes/routes.ts`, solo se estaba inyectando la primera.
+    *   **Solución:** Se instanció `EmailService` en el archivo de rutas y se inyectó correctamente en el constructor del caso de uso, completando sus dependencias.
+
+#### **Flujo de Trabajo de Depuración y Solución:**
+
+El proceso de depuración reveló una cadena de errores interconectados, donde la solución de uno destapaba el siguiente. Este es un resumen del flujo:
+
+1.  **Error Inicial de Tipos (`Role`):** Un error de tipos entre el `Role` del dominio y el de Prisma llevó a revisar las dependencias.
+2.  **Error de Inyección de Dependencias:** Se descubrió que `EmailService` no estaba siendo inyectado en `RegisterUserUseCase`.
+3.  **Error en Tiempo de Ejecución (`El ID es requerido`):** Una vez corregido lo anterior, la API arrojaba un error al intentar leer un usuario recién creado. La causa raíz era el uso incorrecto de `upsert`, que generaba registros corruptos en la base de datos sin un ID válido.
+4.  **Error de `Unique constraint`:** Tras refactorizar `save` para usar `create`/`update`, la aplicación fallaba al intentar registrar un usuario cuyo email ya existía en un registro corrupto. Esto se solucionó robusteciendo `findByEmail` para que, en lugar de fallar silenciosamente, lanzara un error de servidor (`500 Internal Server Error`), indicando un problema de integridad de datos.
+5.  **Error de Datos en la Respuesta (`name` era una fecha):** Finalmente, con el flujo de registro funcionando, se detectó que la respuesta devolvía una fecha en lugar del nombre del usuario. La causa era un simple error de orden en los argumentos pasados al constructor de `UserEntity`.
+
+Este proceso iterativo de depuración y refactorización ha fortalecido significativamente la robustez y fiabilidad del servicio de autenticación, asegurando que cada capa cumpla correctamente con sus responsabilidades.
