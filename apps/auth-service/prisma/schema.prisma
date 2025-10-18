@@ -39,7 +39,7 @@ model User {
   emailVerified              Boolean  @default(false)      // (Pequeño cambio de nombre a un inglés más común)
   verificationToken          String?  @unique             // 1. El token específico para verificar email
   verificationTokenExpires   DateTime?                     // 2. La fecha en que ese token expira
-  
+  refreshTokens String[] @default([])
   // Ya no necesitas el campo genérico "token"
 }
 
