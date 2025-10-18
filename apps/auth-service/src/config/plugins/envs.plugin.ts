@@ -10,4 +10,6 @@ export const envs = {
     MAILER_SERVICE:env.get('MAILER_SERVICE').required().asString(),
     MAILER_SECRET_KEY:env.get('MAILER_SECRET_KEY').required().asString(),
     MAILER_EMAIL:env.get('MAILER_EMAIL').required().asEmailString(),
+    JWT_ACCESS_SECRET:env.get('JWT_ACCESS_SECRET').required().asString(),
+    JWT_REFRESH_SECRET:env.get('JWT_REFRESH_SECRET').required().asString(),
 }
