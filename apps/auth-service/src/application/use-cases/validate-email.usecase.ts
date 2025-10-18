@@ -44,8 +44,8 @@ export class ValidateEmailUseCase {
 
     // 4. Modificar la entidad en memoria.
     user.emailVerified = true;
-    user.verificationToken = undefined; // Limpiar el token para invalidarlo.
-    user.verificationTokenExpires = undefined;
+    user.verificationToken = null; // Limpiar el token para invalidarlo.
+    user.verificationTokenExpires = null
 
     // 5. CAMBIO CLAVE: Usar el método 'save' para guardar la entidad actualizada.
     await this.userRepository.save(user);
