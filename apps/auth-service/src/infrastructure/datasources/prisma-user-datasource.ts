@@ -28,20 +28,22 @@ export class UserPrismaDatasource implements UserRepository {
       role: user.role === DomainRole.ADMIN ? PrismaRole.ADMIN : PrismaRole.USER,
       verificationToken: user.verificationToken,
       verificationTokenExpires: user.verificationTokenExpires,
+      // 👇 ¡SOLUCIÓN! AÑADE ESTA LÍNEA QUE FALTABA
+      refreshTokens: user.refreshTokens,
     };
 
+    // Este truco para eliminar 'undefined' es bueno, puedes conservarlo.
     const userData = JSON.parse(JSON.stringify(data));
 
-    // Si la entidad NO tiene un ID, es un usuario nuevo. Usamos 'create'.
     if (!user.id) {
+      // Create
       const newUser = await prisma.user.create({
         data: userData,
       });
-      // Prisma genera el ID y el objeto newUser lo incluirá.
       return UserEntity.fromObject(newUser);
     }
 
-    // Si la entidad SÍ tiene un ID, es un usuario existente. Usamos 'update'.
+    // Update
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: userData,
@@ -49,7 +51,6 @@ export class UserPrismaDatasource implements UserRepository {
 
     return UserEntity.fromObject(updatedUser);
   }
-
   // MÉTODO NUEVO (aunque no se usa en register, es parte del contrato)
   async findById(id: string): Promise<UserEntity | null> {
     const user = await prisma.user.findUnique({ where: { id } });
