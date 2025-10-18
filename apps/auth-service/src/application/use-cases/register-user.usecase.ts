@@ -6,6 +6,7 @@ import { EmailService } from '../../presentation/email/email.service.js';
 import { CustomError } from '../../domain/errors/custom.error.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { envs } from '../../config/plugins/envs.plugin.js';
 
 
 // NUEVO: Definimos un DTO de respuesta para no retornar la entidad completa.
@@ -40,7 +41,7 @@ export class RegisterUserUseCase {
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
     // 3. Generar el token de verificación (lógica de aplicación).
-    const verificationToken = jwt.sign({}, process.env.JWT_SECRET || 'secret_for_verification', { expiresIn: '1h' });
+    const verificationToken = jwt.sign({}, envs.JWT_ACCESS_SECRET || 'secret_for_verification', { expiresIn: '1h' });
     const decodedToken: any = jwt.decode(verificationToken);
     const expirationDate = new Date(decodedToken.exp * 1000);
 
@@ -53,9 +54,11 @@ export class RegisterUserUseCase {
       Role.USER,
       false,
       dto.name,
+      [],
       new Date(),
       expirationDate,
-      verificationToken
+      verificationToken,
+     
     );
 
     // 5. Usar el método 'save' del repositorio para persistir la entidad.
