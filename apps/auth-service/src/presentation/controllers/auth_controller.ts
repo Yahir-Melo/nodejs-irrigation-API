@@ -1,10 +1,11 @@
 import type { Request, Response } from "express";
 import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
-import { RegisterUserDto } from "../../domain/dtos/auth/register.user.dto.js";
-import { LoginUserDto } from "../../domain/dtos/auth/login.user.dto.js";
-import { LoginUserUseCase } from "../../application/use-cases/login-user.usecase.js";
+import { LoginUserUseCase, type LoginUserResponseDto } from "../../application/use-cases/login-user.usecase.js";
 import type { ValidateEmailUseCase } from "../../application/use-cases/validate-email.usecase.js";
 import { CustomError } from "../../domain/errors/custom.error.js";
+import { LoginUserDto } from "../../application/dtos/auth/login.user.dto.js";
+import { RegisterUserDto } from "../../application/dtos/auth/register.user.dto.js";
+import type { RefreshTokenUseCase } from "../../application/use-cases/refresh-token.usecase.js";
 
 export class AuthController {
 
@@ -13,7 +14,8 @@ export class AuthController {
 
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly loginUserUseCase: LoginUserUseCase,
-    private readonly validateEmailUseCase: ValidateEmailUseCase
+    private readonly validateEmailUseCase: ValidateEmailUseCase,
+    private readonly  refreshTokenUseCase:RefreshTokenUseCase
 
   ) { }
 
@@ -42,16 +44,33 @@ export class AuthController {
   }
 
 
-  loginUser = (req: Request, res: Response) => {
+  // En el método loginUser de tu AuthController...
 
+loginUser = (req: Request, res: Response) => {
     const [error, loginUserDto] = LoginUserDto.create(req.body);
     if (error) return res.status(400).json({ error });
-
-
+  
+    // ¡Esta parte ahora funcionará!
     this.loginUserUseCase.execute(loginUserDto!)
-      .then(data => res.json(data))
+      .then(data => {
+        res.json({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          user: data.user,
+        });
+      })
       .catch(error => this.handleError(error, res));
+  }
 
+  refreshToken = (req: Request, res: Response) => {
+    // El cliente nos envía su "foto" (refreshToken) en el cuerpo de la petición.
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(401).json({ error: 'No se proporcionó refresh token' });
+
+    // Le pasamos la foto a nuestra lógica de renovación.
+    this.refreshTokenUseCase.execute(refreshToken)
+      .then(data => res.json(data)) // Le devolvemos el nuevo pase diario.
+      .catch(error => this.handleError(error, res));
   }
 
 
@@ -66,7 +85,7 @@ export class AuthController {
     }
 
     this.validateEmailUseCase.execute({ token })
-      .then(() => res.redirect('http://localhost:5900'))
+      .then(() => res.redirect('/validation-success.html'))
       .catch(error => this.handleError(error, res));
 
   }
