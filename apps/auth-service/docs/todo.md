@@ -29,17 +29,17 @@ Este documento describe tanto las funcionalidades ya implementadas como las tare
 
 #### Mejoras de Seguridad Críticas
 
-- [ ] **Implementar Refresh Tokens:**
-  - [ ] Modificar el `login` para devolver un `accessToken` (corta vida) y un `refreshToken` (larga vida) almacenado en una cookie `httpOnly`.
-  - [ ] Crear un endpoint `POST /api/auth/refresh` que valide el `refreshToken` y emita un nuevo `accessToken`.
-  - [ ] Almacenar los `refreshToken` activos en la base de datos para permitir su invalidación.
+- [x] **Implementar Refresh Tokens:**
+  - [x] Modificar el `login` para devolver un `accessToken` (corta vida) y un `refreshToken` (larga vida) almacenado en una cookie `httpOnly`.
+  - [x] Crear un endpoint `POST /api/auth/refresh` que valide el `refreshToken` y emita un nuevo `accessToken`.
+  - [x] Almacenar los `refreshToken` activos en la base de datos para permitir su invalidación.
 
 - [ ] **Implementar Revocación de Tokens (Logout):**
   - [ ] Crear un endpoint `POST /api/auth/logout`.
   - [ ] Al recibir la petición, invalidar el `refreshToken` en la base de datos para que no pueda ser reutilizado.
 
-- [ ] **Añadir Rate Limiting:**
-  - [ ] Implementar `express-rate-limit` en los endpoints más sensibles (`login`, `register`, `forgot-password`) para prevenir ataques de fuerza bruta.
+- [x] **Añadir Rate Limiting:**
+  - [x] Implementar `express-rate-limit` en los endpoints más sensibles (`login`, `register`, `forgot-password`) para prevenir ataques de fuerza bruta.
 
 - [ ] **Configurar CORS (Cross-Origin Resource Sharing):**
   - [ ] Añadir el middleware `cors` y configurarlo para permitir peticiones solo desde los dominios del frontend autorizados.
