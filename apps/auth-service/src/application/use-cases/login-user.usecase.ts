@@ -5,6 +5,7 @@ import { UserRepository } from '../../domain/repositories/user.repository.js';
 import { CustomError } from '../../domain/errors/custom.error.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { envs } from '../../config/plugins/envs.plugin.js';
 
 export interface LoginUserResponseDto {
   accessToken: string;
@@ -40,13 +41,13 @@ export class LoginUserUseCase {
 
     const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      "access_secret",
+      envs.JWT_ACCESS_SECRET || "access_secret",
       { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      "refresh_secret_super_segura",
+      envs.JWT_REFRESH_SECRET || "refresh_secret_super_segura",
       { expiresIn: "7d" }
     );
 
