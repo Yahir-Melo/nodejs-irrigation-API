@@ -34,25 +34,28 @@ Este documento describe tanto las funcionalidades ya implementadas como las tare
   - [x] Crear un endpoint `POST /api/auth/refresh` que valide el `refreshToken` y emita un nuevo `accessToken`.
   - [x] Almacenar los `refreshToken` activos en la base de datos para permitir su invalidación.
 
-- [ ] **Implementar Revocación de Tokens (Logout):**
-  - [ ] Crear un endpoint `POST /api/auth/logout`.
-  - [ ] Al recibir la petición, invalidar el `refreshToken` en la base de datos para que no pueda ser reutilizado.
+- [x] **Implementar Revocación de Tokens (Logout):**
+  - [x] Crear un endpoint `POST /api/auth/logout`.
+  - [x] Al recibir la petición, invalidar el `refreshToken` en la base de datos para que no pueda ser reutilizado.
 
 - [x] **Añadir Rate Limiting:**
   - [x] Implementar `express-rate-limit` en los endpoints más sensibles (`login`, `register`, `forgot-password`) para prevenir ataques de fuerza bruta.
 
 - [ ] **Configurar CORS (Cross-Origin Resource Sharing):**
   - [ ] Añadir el middleware `cors` y configurarlo para permitir peticiones solo desde los dominios del frontend autorizados.
+  
+  ESTO SE IMPLEMENTA CON FRONTEND DE WEB
+  EN EL CASO DE MOVIL NO 
 
 - [ ] **Añadir Cabeceras de Seguridad:**
   - [ ] Utilizar `helmet` para configurar cabeceras HTTP de seguridad (`X-Content-Type-Options`, `Strict-Transport-Security`, etc.) y prevenir ataques comunes (XSS, clickjacking).
 
 #### Funcionalidades Adicionales
 
-- [ ] **Implementar Flujo de "Olvidé mi Contraseña":**
-  - [ ] Crear endpoint `POST /api/auth/forgot-password` que reciba un email.
-  - [ ] Generar un token de reseteo (un solo uso, corta expiración) y enviarlo por email.
-  - [ ] Crear endpoint `POST /api/auth/reset-password` que reciba el token y la nueva contraseña.
+- [x] **Implementar Flujo de "Olvidé mi Contraseña":**
+  - [x] Crear endpoint `POST /api/auth/forgot-password` que reciba un email.
+  - [x] Generar un token de reseteo (un solo uso, corta expiración) y enviarlo por email.
+  - [x] Crear endpoint `POST /api/auth/reset-password` que reciba el token y la nueva contraseña.
 
 - [ ] **Implementar Autenticación de Dos Factores (2FA):**
   - [ ] Permitir al usuario habilitar 2FA (ej. con Google Authenticator).
