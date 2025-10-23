@@ -33,4 +33,9 @@ export abstract class UserRepository {
    * @param token El token de verificación.
    */
   abstract findByVerificationToken(token: string): Promise<UserEntity | null>;
+
+  abstract findByPasswordResetToken(token: string): Promise<UserEntity | null>;
+
+
+
 }

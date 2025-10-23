@@ -15,6 +15,8 @@ export class UserEntity {
     public updatedAt?: Date,
     public verificationTokenExpires?: Date | null,
     public verificationToken?: string | null,
+    public passwordResetToken?: string | null,
+    public passwordResetExpires?: Date | null
   ) {}
 
   public static fromObject(object: { [key: string]: any }): UserEntity {
@@ -31,6 +33,8 @@ export class UserEntity {
       verificationTokenExpires,
       verificationToken,
       refreshTokens = [], 
+      passwordResetToken,
+      passwordResetExpires,
     } = object;
 
     if (!id) throw new Error('El ID es requerido');
@@ -58,7 +62,9 @@ export class UserEntity {
       refreshTokens,
       updatedAt,
       verificationTokenExpires,
-      verificationToken
+      verificationToken,
+      passwordResetToken,
+      passwordResetExpires
     );
   }
 }

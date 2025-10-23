@@ -26,31 +26,42 @@ export class UserPrismaDatasource implements UserRepository {
       passwordHash: user.passwordHash,
       emailVerified: user.emailVerified,
       role: user.role === DomainRole.ADMIN ? PrismaRole.ADMIN : PrismaRole.USER,
+      
+      // Mapeo de verificación (ya lo tenías)
       verificationToken: user.verificationToken,
       verificationTokenExpires: user.verificationTokenExpires,
-      // 👇 ¡SOLUCIÓN! AÑADE ESTA LÍNEA QUE FALTABA
+      
+      // Mapeo de refresh (ya lo tenías)
       refreshTokens: user.refreshTokens,
+
+      // 👇 ¡SOLUCIÓN! AÑADE ESTAS DOS LÍNEAS QUE FALTABAN
+      passwordResetToken: user.passwordResetToken,
+      passwordResetExpires: user.passwordResetExpires,
     };
 
-    // Este truco para eliminar 'undefined' es bueno, puedes conservarlo.
-    const userData = JSON.parse(JSON.stringify(data));
+    // Usamos el objeto 'data' limpio, no el 'cleanUserData' que tenías
+    // El truco de JSON.parse(JSON.stringify(data)) es bueno para eliminar 'undefined'
+    const cleanUserData = JSON.parse(JSON.stringify(data)); 
 
+    // Si la entidad NO tiene un ID, es un usuario nuevo. Usamos 'create'.
     if (!user.id) {
-      // Create
       const newUser = await prisma.user.create({
-        data: userData,
+        data: cleanUserData,
       });
       return UserEntity.fromObject(newUser);
     }
 
-    // Update
+    // Si la entidad SÍ tiene un ID, es un usuario existente. Usamos 'update'.
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: userData,
+      data: cleanUserData,
     });
 
     return UserEntity.fromObject(updatedUser);
   }
+
+
+
   // MÉTODO NUEVO (aunque no se usa en register, es parte del contrato)
   async findById(id: string): Promise<UserEntity | null> {
     const user = await prisma.user.findUnique({ where: { id } });
@@ -70,6 +81,13 @@ export class UserPrismaDatasource implements UserRepository {
   async findByVerificationToken(token: string): Promise<UserEntity | null> {
     const user = await prisma.user.findFirst({
       where: { verificationToken: token },
+    });
+    return user ? UserEntity.fromObject(user) : null;
+  }
+
+  async findByPasswordResetToken(token: string): Promise<UserEntity | null> {
+    const user = await prisma.user.findFirst({
+      where: { passwordResetToken: token },
     });
     return user ? UserEntity.fromObject(user) : null;
   }
