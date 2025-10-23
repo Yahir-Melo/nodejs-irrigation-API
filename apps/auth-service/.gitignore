@@ -11,8 +11,7 @@
 
 # Archivos de Logs
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+yarn-debug.log*z    
 logs/
 
 # Carpetas de build/distribución
