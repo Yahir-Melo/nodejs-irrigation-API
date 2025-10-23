@@ -6,6 +6,7 @@ import { ValidateEmailUseCase } from "../../application/use-cases/validate-email
 import { loginLimiter, registerLimiter } from "../middlewares/rateLimiter.middleware.js";
 import { EmailService } from "../email/email.service.js";
 import { RefreshTokenUseCase } from "../../application/use-cases/refresh-token.usecase.js";
+import { LogoutUserUseCase } from "../../application/use-cases/logout-user.usecase.js";
 import { ForgotPasswordUseCase } from "../../application/use-cases/forgot-password.usecase.js";
 import { ResetPasswordUseCase } from "../../application/use-cases/reset-password.usecasse.js";
 import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
@@ -22,6 +23,7 @@ export class Authroutes {
     const loginUseCase = new LoginUserUseCase(userRepository);
     const validateEmailUseCase = new ValidateEmailUseCase(userRepository);
     const refreshTokenUseCase  = new RefreshTokenUseCase(userRepository);
+    const logoutUseCase = new LogoutUserUseCase(userRepository);
     const forgotPasswordUseCase = new ForgotPasswordUseCase(userRepository, emailService);
     const resetPasswordUseCase = new ResetPasswordUseCase(userRepository);
 
@@ -31,21 +33,23 @@ export class Authroutes {
       loginUseCase,
       validateEmailUseCase,
       refreshTokenUseCase,
+      logoutUseCase,
       forgotPasswordUseCase,
       resetPasswordUseCase,
-    
-    
+
+
     );
 
     router.post('/register', registerLimiter,controller.registerUser);
     router.post('/login', loginLimiter,controller.loginUser);
     router.get('/validate-email/:token', controller.validateEmail);
     router.post('/refresh-token', controller.refreshToken);
+    router.post('/logout', controller.logoutUser);
     router.post('/forgot-password', controller.forgotPassword);
     router.post('/reset-password', controller.resetPassword);
-    
+
     return router;
-    
+
   }
 }
 
@@ -83,7 +87,7 @@ export class Authroutes {
  * @paso 2: Inyección de Dependencias (Composición de Objetos)
  *   - `const userRepository = new UserPrismaDatasource();`
  *     - Se crea una instancia del `UserPrismaDatasource`, que es la implementación concreta
- *       de la fuente de datos para usuarios, utilizando Prisma.
+ *       de la fuente de datos para usuarios, utilizando Prisma.f
  *   - `const registerUseCase = new RegisterUserUseCase(userRepository);`
  *     - Se crea el caso de uso para registrar usuarios, inyectándole el repositorio.
  *   - `const loginUseCase = new LoginUserUseCase(userRepository);`

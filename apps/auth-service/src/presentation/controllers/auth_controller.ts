@@ -5,6 +5,7 @@ import { CustomError } from "../../domain/errors/custom.error.js";
 import { LoginUserDto } from "../../application/dtos/auth/login.user.dto.js";
 import { RegisterUserDto } from "../../application/dtos/auth/register.user.dto.js";
 import type { RefreshTokenUseCase } from "../../application/use-cases/refresh-token.usecase.js";
+import type { LogoutUserUseCase } from "../../application/use-cases/logout-user.usecase.js";
 import type { ForgotPasswordUseCase } from "../../application/use-cases/forgot-password.usecase.js";
 import type { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
 import type { ResetPasswordDto, ResetPasswordUseCase } from "../../application/use-cases/reset-password.usecasse.js";
@@ -19,6 +20,7 @@ export class AuthController {
     private readonly loginUserUseCase: LoginUserUseCase,
     private readonly validateEmailUseCase: ValidateEmailUseCase,
     private readonly  refreshTokenUseCase:RefreshTokenUseCase,
+    private readonly logoutUserUseCase: LogoutUserUseCase, //
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase
 
@@ -96,6 +98,18 @@ loginUser = (req: Request, res: Response) => {
 
   }
 
+
+  logoutUser = (req: Request, res: Response) => {
+    // El cliente debe enviar el refreshToken que quiere invalidar
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'No se proporcionó refresh token' });
+    }
+
+    this.logoutUserUseCase.execute(refreshToken)
+      .then(() => res.status(200).json({ message: 'Logout exitoso' }))
+      .catch(error => this.handleError(error, res));
+  }
 
   // 👇 AÑADE EL MÉTODO PARA FORGOT-PASSWORD
   forgotPassword = (req: Request, res: Response) => {
