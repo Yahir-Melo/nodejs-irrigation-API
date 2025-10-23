@@ -1,15 +1,17 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth_controller.js";
-import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
 import { UserPrismaDatasource } from "../../infrastructure/datasources/prisma-user-datasource.js";
 import { LoginUserUseCase } from "../../application/use-cases/login-user.usecase.js";
 import { ValidateEmailUseCase } from "../../application/use-cases/validate-email.usecase.js";
 import { loginLimiter, registerLimiter } from "../middlewares/rateLimiter.middleware.js";
 import { EmailService } from "../email/email.service.js";
 import { RefreshTokenUseCase } from "../../application/use-cases/refresh-token.usecase.js";
+import { ForgotPasswordUseCase } from "../../application/use-cases/forgot-password.usecase.js";
+import { ResetPasswordUseCase } from "../../application/use-cases/reset-password.usecasse.js";
+import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
 
 export class Authroutes {
-  
+
   static get routes(): Router {
 
     const router = Router();
@@ -20,15 +22,28 @@ export class Authroutes {
     const loginUseCase = new LoginUserUseCase(userRepository);
     const validateEmailUseCase = new ValidateEmailUseCase(userRepository);
     const refreshTokenUseCase  = new RefreshTokenUseCase(userRepository);
+    const forgotPasswordUseCase = new ForgotPasswordUseCase(userRepository, emailService);
+    const resetPasswordUseCase = new ResetPasswordUseCase(userRepository);
 
 
-    const controller = new AuthController(registerUseCase, loginUseCase, validateEmailUseCase,refreshTokenUseCase);
+    const controller = new AuthController( 
+      registerUseCase,
+      loginUseCase,
+      validateEmailUseCase,
+      refreshTokenUseCase,
+      forgotPasswordUseCase,
+      resetPasswordUseCase,
+    
+    
+    );
 
     router.post('/register', registerLimiter,controller.registerUser);
     router.post('/login', loginLimiter,controller.loginUser);
     router.get('/validate-email/:token', controller.validateEmail);
     router.post('/refresh-token', controller.refreshToken);
-
+    router.post('/forgot-password', controller.forgotPassword);
+    router.post('/reset-password', controller.resetPassword);
+    
     return router;
     
   }

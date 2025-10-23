@@ -1,13 +1,16 @@
 import type { Request, Response } from "express";
-import { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
 import { LoginUserUseCase, type LoginUserResponseDto } from "../../application/use-cases/login-user.usecase.js";
 import type { ValidateEmailUseCase } from "../../application/use-cases/validate-email.usecase.js";
 import { CustomError } from "../../domain/errors/custom.error.js";
 import { LoginUserDto } from "../../application/dtos/auth/login.user.dto.js";
 import { RegisterUserDto } from "../../application/dtos/auth/register.user.dto.js";
 import type { RefreshTokenUseCase } from "../../application/use-cases/refresh-token.usecase.js";
+import type { ForgotPasswordUseCase } from "../../application/use-cases/forgot-password.usecase.js";
+import type { RegisterUserUseCase } from "../../application/use-cases/register-user.usecase.js";
+import type { ResetPasswordDto, ResetPasswordUseCase } from "../../application/use-cases/reset-password.usecasse.js";
 
 export class AuthController {
+
 
 
   constructor(
@@ -15,7 +18,10 @@ export class AuthController {
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly loginUserUseCase: LoginUserUseCase,
     private readonly validateEmailUseCase: ValidateEmailUseCase,
-    private readonly  refreshTokenUseCase:RefreshTokenUseCase
+    private readonly  refreshTokenUseCase:RefreshTokenUseCase,
+    private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase
+
 
   ) { }
 
@@ -49,7 +55,7 @@ export class AuthController {
 loginUser = (req: Request, res: Response) => {
     const [error, loginUserDto] = LoginUserDto.create(req.body);
     if (error) return res.status(400).json({ error });
-  
+
     // ¡Esta parte ahora funcionará!
     this.loginUserUseCase.execute(loginUserDto!)
       .then(data => {
@@ -91,7 +97,42 @@ loginUser = (req: Request, res: Response) => {
   }
 
 
+  // 👇 AÑADE EL MÉTODO PARA FORGOT-PASSWORD
+  forgotPassword = (req: Request, res: Response) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email es requerido' });
+
+    this.forgotPasswordUseCase.execute(email)
+      .then(data => res.json(data))
+      .catch(error => this.handleError(error, res));
+  }
+
+  // 👇 AÑADE EL MÉTODO PARA RESET-PASSWORD
+  resetPassword = (req: Request, res: Response) => {
+    // El token y la contraseña vendrán en el body
+    const { token, newPassword } = req.body;
+    
+    if (!token) return res.status(400).json({ error: 'Token es requerido' });
+    if (!newPassword) return res.status(400).json({ error: 'Nueva contraseña es requerida' });
+
+    const resetPasswordDto: ResetPasswordDto = { token, newPassword };
+
+    this.resetPasswordUseCase.execute(resetPasswordDto)
+      .then(data => res.json(data))
+      .catch(error => this.handleError(error, res));
+  }
+
+
+
+
+
+
+
+
+
 }
+
+
 
 /**
  * ==================================================================================================

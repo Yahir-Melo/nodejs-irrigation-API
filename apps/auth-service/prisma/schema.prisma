@@ -40,6 +40,8 @@ model User {
   verificationToken          String?  @unique             // 1. El token específico para verificar email
   verificationTokenExpires   DateTime?                     // 2. La fecha en que ese token expira
   refreshTokens String[] @default([])
+  passwordResetToken       String?   @unique
+  passwordResetExpires     DateTime?
   // Ya no necesitas el campo genérico "token"
 }
 

@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import { envs } from '../../config/plugins/envs.plugin.js';
-import { bodyHtml } from '../../config/html-body.js';
+import { generatePasswordResetEmailHtml } from '../../config/html-reset-password-body.js';
 
 interface SendMailOptions {
   to: string | string[];
@@ -9,6 +9,7 @@ interface SendMailOptions {
 }
 
 export class EmailService {
+
 
   private transporter = nodemailer.createTransport({
     service: envs.MAILER_SERVICE,
@@ -34,11 +35,17 @@ export class EmailService {
     }
   }
 
-  sendEmailWithValidateAccount(to: string, link: string, name: string) {
-    const subject = 'Validar tu cuenta de correo';
-    const htmlBody = bodyHtml(link, name);
+
+  sendPasswordResetEmail(to: string, link: string, name: string) {
+    const subject = 'Restablecer tu contraseña';
+    const htmlBody = generatePasswordResetEmailHtml(link, name);
     return this.sendEmail({ to, subject, htmlBody });
   }
+
+
+
+
+
 }
 
 /**
