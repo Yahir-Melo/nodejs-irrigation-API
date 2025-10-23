@@ -1,6 +1,6 @@
 
 
-export function bodyHtml(link: string,name:string): string {
+export function ValidationEmailHtml(link: string,name:string): string {
   
     const email:string =  
 `

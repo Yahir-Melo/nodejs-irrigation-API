@@ -1,12 +1,12 @@
-// src/application/use-cases/register-user.use-case.ts
-import { RegisterUserDto } from '../dtos/auth/register.user.dto.js';
-import { UserEntity, Role } from '../../domain/entities/user.entity.js';
-import { UserRepository } from '../../domain/repositories/user.repository.js';
-import { EmailService } from '../../presentation/email/email.service.js';
-import { CustomError } from '../../domain/errors/custom.error.js';
+
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import type { UserRepository } from '../../domain/repositories/user.repository.js';
+import type { EmailService } from '../../presentation/email/email.service.js';
+import type { RegisterUserDto } from '../dtos/auth/register.user.dto.js';
+import { CustomError } from '../../domain/index.js';
 import { envs } from '../../config/plugins/envs.plugin.js';
+import { Role, UserEntity } from '../../domain/entities/user.entity.js';
 
 
 // NUEVO: Definimos un DTO de respuesta para no retornar la entidad completa.
