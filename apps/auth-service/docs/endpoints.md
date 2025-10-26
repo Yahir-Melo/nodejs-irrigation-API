@@ -107,6 +107,109 @@ Este documento detalla los endpoints disponibles en el microservicio de Autentic
 - **Consideración Adicional:**
   - El endpoint de `login` (`POST /api/auth/login`) ahora requiere que el correo del usuario esté verificado. Si un usuario no verificado intenta iniciar sesión, recibirá un error indicando que su correo no ha sido validado.
 
+### Refrescar Token
+
+- **Endpoint:** `POST /api/auth/refresh-token`
+- **Descripción:** Obtiene un nuevo token de acceso (JWT) utilizando un token de refresco válido.
+- **Flujo:**
+  1. El cliente envía una petición `POST` con el `refreshToken` en el cuerpo (body).
+  2. El `AuthController` recibe la petición.
+  3. Se ejecuta el caso de uso `RefreshTokenUseCase`.
+  4. El caso de uso verifica la validez del `refreshToken`.
+  5. Si es válido, se genera un nuevo token de acceso y un nuevo token de refresco.
+  6. Se invalida el `refreshToken` anterior y se guarda el nuevo.
+  7. Se devuelve un estado `200 OK` con los nuevos tokens.
+- **Cuerpo de la Petición (Request Body):**
+
+  ```json
+  {
+    "refreshToken": "some-refresh-token"
+  }
+  ```
+
+- **Respuesta Exitosa (Success Response):**
+
+  ```json
+  {
+    "token": "new-access-token",
+    "refreshToken": "new-refresh-token"
+  }
+  ```
+
+### Cerrar Sesión
+
+- **Endpoint:** `POST /api/auth/logout`
+- **Descripción:** Cierra la sesión del usuario invalidando sus tokens de refresco.
+- **Flujo:**
+  1. El cliente envía una petición `POST` con un token de acceso válido en las cabeceras.
+  2. Un middleware de autenticación verifica el token y extrae el `userId`.
+  3. El `AuthController` recibe la petición.
+  4. Se ejecuta el caso de uso `LogoutUserUseCase`.
+  5. El caso de uso elimina todos los `RefreshToken` asociados al `userId`.
+  6. Se devuelve un estado `200 OK` con un mensaje de éxito.
+- **Respuesta Exitosa (Success Response):**
+
+  ```json
+  {
+    "message": "Sesión cerrada correctamente"
+  }
+  ```
+
+### Olvidé mi Contraseña
+
+- **Endpoint:** `POST /api/auth/forgot-password`
+- **Descripción:** Inicia el proceso de recuperación de contraseña.
+- **Flujo:**
+  1. El cliente envía una petición `POST` con el `email` del usuario en el cuerpo (body).
+  2. El `AuthController` recibe la petición.
+  3. Se ejecuta el caso de uso `ForgotPasswordUseCase`.
+  4. El caso de uso genera un token de restablecimiento y lo guarda en la base de datos.
+  5. Se envía un correo electrónico al usuario con un enlace para restablecer la contraseña.
+  6. Se devuelve un estado `200 OK` con un mensaje de éxito.
+- **Cuerpo de la Petición (Request Body):**
+
+  ```json
+  {
+    "email": "john.doe@example.com"
+  }
+  ```
+
+- **Respuesta Exitosa (Success Response):**
+
+  ```json
+  {
+    "message": "Correo de recuperación enviado"
+  }
+  ```
+
+### Restablecer Contraseña
+
+- **Endpoint:** `POST /api/auth/reset-password`
+- **Descripción:** Restablece la contraseña del usuario.
+- **Flujo:**
+  1. El cliente envía una petición `POST` con el `token` de restablecimiento, la `newPassword` y la `confirmPassword` en el cuerpo (body).
+  2. El `AuthController` recibe la petición.
+  3. Se ejecuta el caso de uso `ResetPasswordUseCase`.
+  4. El caso de uso valida el token, verifica que las contraseñas coincidan, hashea la nueva contraseña y actualiza la contraseña del usuario.
+  5. Se devuelve un estado `200 OK` con un mensaje de éxito.
+- **Cuerpo de la Petición (Request Body):**
+
+  ```json
+  {
+    "token": "some-reset-token",
+    "newPassword": "new-secure-password",
+    "confirmPassword": "new-secure-password"
+  }
+  ```
+
+- **Respuesta Exitosa (Success Response):**
+
+  ```json
+  {
+    "message": "Contraseña restablecida correctamente"
+  }
+  ```
+
 ---
 
 ## Flujo General de Autenticación de Usuario
@@ -129,4 +232,14 @@ El siguiente diagrama describe el ciclo de vida completo de un usuario en el sis
 4.  **Inicio de Sesión (Login):**
     - Con la cuenta ya verificada, el usuario puede iniciar sesión usando el endpoint `POST /api/auth/login`.
     - El sistema comprueba que el correo haya sido verificado antes de autenticar al usuario.
-    - Si las credenciales son correctas y la cuenta está verificada, el servidor devuelve un token de acceso (JWT) para que el cliente lo use en peticiones posteriores.
+    - Si las credenciales son correctas y la cuenta está verificada, el servidor devuelve un token de acceso (JWT) y un token de refresco para que el cliente los use en peticiones posteriores.
+
+5.  **Refrescar Sesión:**
+    - Cuando el token de acceso expira, el cliente puede usar el token de refresco para obtener un nuevo par de tokens a través del endpoint `POST /api/auth/refresh-token`.
+
+6.  **Cerrar Sesión:**
+    - El usuario puede cerrar su sesión a través del endpoint `POST /api/auth/logout`, que invalida los tokens de refresco.
+
+7.  **Recuperación de Contraseña:**
+    - Si el usuario olvida su contraseña, puede solicitar un enlace de recuperación a través de `POST /api/auth/forgot-password`.
+    - Luego, puede restablecer su contraseña utilizando el enlace recibido y el endpoint `POST /api/auth/reset-password`.
