@@ -655,3 +655,132 @@ El proceso de depuración reveló una cadena de errores interconectados, donde l
 5.  **Error de Datos en la Respuesta (`name` era una fecha):** Finalmente, con el flujo de registro funcionando, se detectó que la respuesta devolvía una fecha en lugar del nombre del usuario. La causa era un simple error de orden en los argumentos pasados al constructor de `UserEntity`.
 
 Este proceso iterativo de depuración y refactorización ha fortalecido significativamente la robustez y fiabilidad del servicio de autenticación, asegurando que cada capa cumpla correctamente con sus responsabilidades.
+
+---
+
+### **Fase 9: Implementación de Refresh Token**
+$\small \text{ Fecha: 2025-OCT-17} $
+
+Se añade la capacidad de refrescar tokens de acceso (JWT) para mejorar la seguridad y la experiencia de usuario, evitando que los usuarios tengan que iniciar sesión repetidamente.
+
+*   **1 - Modificación del Esquema de Prisma:** 
+    Se añadió un modelo `RefreshToken` en `prisma/schema.prisma` para almacenar los tokens de refresco de forma persistente. Cada token está vinculado a un `User`.
+    ```prisma
+    model RefreshToken {
+      id        String   @id @default(cuid())
+      token     String   @unique
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt
+      userId    String
+      user      User     @relation(fields: [userId], references: [id])
+    }
+    ```
+    Posteriormente, se aplicó la migración a la base de datos con `npx prisma migrate dev`.
+
+*   **2 - Extensión de la Entidad de Usuario:** 
+    Se actualizó la `UserEntity` en el dominio para incluir una propiedad opcional `refreshTokens` de tipo `RefreshToken[]`, permitiendo que la entidad maneje la relación con los tokens de refresco.
+
+*   **3 - Variables de Entorno para JWT:** 
+    Se añadieron `JWT_REFRESH_SECRET` al archivo `.env` y se configuraron en el plugin de `envs` para tener claves separadas para los tokens de acceso y los de refresco, una práctica de seguridad recomendada.
+
+*   **4 - Creación del Caso de Uso (`refresh-token.usecase.ts`):** 
+    Este caso de uso orquesta la lógica para refrescar un token:
+    1.  Recibe un token de refresco como entrada.
+    2.  Verifica la validez del token usando `JWT_REFRESH_SECRET`.
+    3.  Busca el token en la base de datos para asegurarse de que no ha sido revocado.
+    4.  Si es válido, genera un nuevo token de acceso (JWT) y un nuevo token de refresco.
+    5.  Invalida el token de refresco antiguo y guarda el nuevo.
+
+*   **5 - Actualización del Repositorio y Datasource:** 
+    Se extendió el `UserRepository` y su implementación `UserPrismaDatasource` para incluir métodos que manejen la creación, búsqueda y eliminación de tokens de refresco en la base de datos.
+
+*   **6 - Creación de la Ruta de Refresh Token:** 
+    Se añadió un nuevo endpoint `POST /api/auth/refresh-token` en `presentation/routes/auth_routes.ts`. Este endpoint está protegido y espera un token de refresco en el cuerpo de la petición.
+
+#### **Flujo de Trabajo de Refresh Token:**
+
+1.  **Login Exitoso:** Cuando un usuario inicia sesión, además del token de acceso, recibe un token de refresco.
+2.  **Token de Acceso Expira:** El cliente intenta hacer una petición a un recurso protegido con un token de acceso expirado.
+3.  **Petición de Refresh:** El cliente envía su token de refresco al endpoint `POST /api/auth/refresh-token`.
+4.  **Validación:** El `refresh-token.usecase.ts` valida el token de refresco.
+5.  **Generación de Nuevos Tokens:** Si la validación es exitosa, el servidor genera un nuevo token de acceso y un nuevo token de refresco.
+6.  **Respuesta:** El servidor devuelve los nuevos tokens al cliente, que puede entonces reintentar la petición original con el nuevo token de acceso.
+
+---
+
+### **Fase 10: Implementación de Recuperación de Contraseña**
+$\small \text{ Fecha: 2025-OCT-22} $
+
+Se implementa el flujo completo para que los usuarios puedan solicitar un restablecimiento de contraseña si la han olvidado.
+
+*   **1 - Modificación del Esquema de Prisma:** 
+    Se añadieron campos opcionales al modelo `User` para gestionar el proceso de recuperación:
+    *   `passwordResetToken`: Almacena un token único para el restablecimiento.
+    *   `passwordResetExpires`: Define la fecha de expiración de dicho token.
+    ```prisma
+    model User {
+      // ...
+      passwordResetToken   String?
+      passwordResetExpires DateTime?
+    }
+    ```
+    Se aplicó la migración con `npx prisma migrate dev`.
+
+*   **2 - Creación de Casos de Uso:** 
+    Se crearon dos casos de uso para separar las responsabilidades del flujo:
+    *   **`forgot-password.usecase.ts`:**
+        1.  Recibe el email del usuario.
+        2.  Genera un token de restablecimiento único y su fecha de expiración.
+        3.  Guarda el token y la fecha en el registro del usuario en la base de datos.
+        4.  Utiliza `EmailService` para enviar un correo al usuario con un enlace para restablecer la contraseña.
+    *   **`reset-password.usecase.ts`:**
+        1.  Recibe el token de restablecimiento, la nueva contraseña y su confirmación.
+        2.  Valida que el token exista y no haya expirado.
+        3.  Verifica que las contraseñas coincidan.
+        4.  Hashea la nueva contraseña.
+        5.  Actualiza la contraseña del usuario y limpia los campos `passwordResetToken` y `passwordResetExpires`.
+
+*   **3 - Creación de las Rutas:** 
+    Se añadieron dos nuevos endpoints en `presentation/routes/auth_routes.ts`:
+    *   `POST /api/auth/forgot-password`: Para que el usuario solicite el correo de restablecimiento.
+    *   `POST /api/auth/reset-password`: Para que el usuario envíe su nueva contraseña junto con el token.
+
+*   **4 - Creación de Páginas HTML:** 
+    Se crearon dos archivos HTML simples en la carpeta `public/` para dar feedback visual al usuario:
+    *   `reset-password.html`: Un formulario donde el usuario puede introducir su nueva contraseña.
+    *   `validation-success.html`: Una página que confirma que la contraseña ha sido cambiada con éxito.
+
+#### **Flujo de Trabajo de Recuperación de Contraseña:**
+
+1.  **Solicitud:** El usuario introduce su email en la página de "olvidé mi contraseña" y envía una petición a `POST /api/auth/forgot-password`.
+2.  **Envío de Correo:** El `forgot-password.usecase.ts` genera un token, lo guarda y envía un correo al usuario con un enlace (ej: `https://api.example.com/api/auth/reset-password?token=some-token`).
+3.  **Formulario de Restablecimiento:** El usuario hace clic en el enlace y es dirigido a `reset-password.html`, que contiene un formulario para la nueva contraseña.
+4.  **Envío de Nueva Contraseña:** El usuario envía el formulario, realizando una petición `POST` a `/api/auth/reset-password` con el token y la nueva contraseña.
+5.  **Validación y Actualización:** El `reset-password.usecase.ts` valida el token, hashea la nueva contraseña y actualiza el registro del usuario.
+6.  **Confirmación:** Si todo es correcto, el servidor redirige al usuario a `validation-success.html`.
+
+---
+
+### **Fase 11: Implementación de Logout**
+$\small \text{ Fecha: 2025-OCT-23} $
+
+Se implementa la funcionalidad de cierre de sesión, invalidando el token de refresco del usuario para asegurar que no pueda ser reutilizado.
+
+*   **1 - Creación del Caso de Uso (`logout-user.usecase.ts`):** 
+    Este caso de uso se encarga de la lógica de cierre de sesión:
+    1.  Recibe el ID del usuario (extraído del token de acceso en un middleware previo).
+    2.  Llama al `UserRepository` para eliminar todos los `RefreshToken` asociados a ese ID de usuario.
+
+*   **2 - Extensión del Repositorio y Datasource:** 
+    Se añadió un método `deleteRefreshTokensByUserId(userId: string)` al `UserRepository` y su correspondiente implementación en `UserPrismaDatasource`, que utiliza `prisma.refreshToken.deleteMany()` para borrar los tokens.
+
+*   **3 - Creación de la Ruta de Logout:** 
+    Se añadió un endpoint `POST /api/auth/logout` en `presentation/routes/auth_routes.ts`. Esta ruta está protegida por un middleware de autenticación que verifica el token de acceso y extrae el ID del usuario.
+
+#### **Flujo de Trabajo de Logout:**
+
+1.  **Petición de Logout:** El cliente envía una petición `POST` a `/api/auth/logout` con un token de acceso válido en las cabeceras.
+2.  **Autenticación:** Un middleware verifica el token de acceso y extrae el `userId`.
+3.  **Caso de Uso:** El `logout-user.usecase.ts` es invocado con el `userId`.
+4.  **Invalidación de Tokens:** El caso de uso instruye al `UserRepository` que elimine todos los tokens de refresco para ese usuario.
+5.  **Respuesta:** El servidor responde con un mensaje de éxito, confirmando que la sesión ha sido cerrada. El token de acceso actual seguirá siendo válido hasta que expire, pero el usuario no podrá obtener uno nuevo sin volver a iniciar sesión.
