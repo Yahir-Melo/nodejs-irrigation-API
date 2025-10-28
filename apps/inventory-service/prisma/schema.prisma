@@ -13,3 +13,22 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Product {
+  id          String    @id @default(uuid())
+  name        String
+  sku         String    @unique // El SKU es clave para buscar
+  price       Float     // Precio de venta ($499.00)
+  stock       Int       @default(0) // Cantidad en inventario (128 unidades)
+  
+  // --- Campos Adicionales Recomendados ---
+  description String?   // "Azul, Talla M"
+  category    String?   // Para los filtros de "Categoría"
+  status      String    // Para "En Stock", "Bajo Stock", "Agotado"
+  
+  // (Opcional) Para relacionarlo con el usuario que lo creó
+  // createdById String
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
