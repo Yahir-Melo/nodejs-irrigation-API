@@ -1,13 +1,27 @@
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 export class InventoryController {
+   getProducts() {
+      throw new Error("Method not implemented.");
+   }
 
-    profile(req: Request, res: Response) {
-        // Envía una respuesta con estado 200 (OK) y un cuerpo JSON
-        return res.status(200).json({
-            success: true,
-            message: 'Perfil obtenido exitosamente'
-        });
-    }
+   createProduct() {
+      throw new Error("Method not implemented.");
+   }
+
+   getProductById(){
+    throw new Error("Method not implemented.");
+   }
+
+   updateProduct(){
+    throw new Error("Method not implemented.");
+   }
+
+   deleteProduct(){
+    throw new Error("Method not implemented.");
+   }
+
+   
+
 
 }
