@@ -6,6 +6,10 @@ import { PrismaClient } from '../../generated/prisma/index.js';
 const prisma = new PrismaClient(); // Instancia de Prisma
 
 export class ProductPrismaDatasource implements ProductRepository {
+  
+  
+
+
 
   // Implementamos el método 'save' "inteligente"
   async save(product: ProductEntity): Promise<ProductEntity> {
@@ -41,4 +45,27 @@ export class ProductPrismaDatasource implements ProductRepository {
     if (!product) return null;
     return ProductEntity.fromObject(product);
   }
+
+
+
+
+  //IMPLEMENTACION DEL METODO PARA BUSCAR POR ID
+  async findById(id: string): Promise<ProductEntity | null> {
+    const product = await prisma.product.findUnique({
+      where: { id: id }
+    });
+
+    // Si no se encuentra, devolvemos null
+    if (!product) return null;
+
+    // Si se encuentra, lo convertimos a nuestra entidad y lo devolvemos
+    return ProductEntity.fromObject(product);
+  }
+
+
+  
+
+
+
+
 }

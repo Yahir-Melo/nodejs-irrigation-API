@@ -9,4 +9,5 @@ export abstract class ProductRepository {
   // Necesitaremos esto para verificar que el SKU no se repita
   abstract findBySku(sku: string): Promise<ProductEntity | null>;
   abstract findById(id: string): Promise<ProductEntity | null>;
+  
 }
