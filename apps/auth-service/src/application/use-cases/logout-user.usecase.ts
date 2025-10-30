@@ -12,7 +12,7 @@ export class LogoutUserUseCase {
   async execute(refreshToken: string): Promise<{ success: boolean }> {
     try {
       // 1. Verificar el token para asegurarnos de que es válido y obtener el ID
-      const payload = jwt.verify(refreshToken, envs.JWT_REFRESH_SECRET || 'refresh_secret') as { id: string };
+      const payload = jwt.verify(refreshToken, envs.JWT_REFRESH_SECRET ) as { id: string };
 
       // 2. Buscar al usuario por su ID
       const user = await this.userRepository.findById(payload.id);

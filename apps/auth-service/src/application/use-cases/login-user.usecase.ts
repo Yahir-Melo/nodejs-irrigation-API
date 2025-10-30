@@ -65,14 +65,14 @@ export class LoginUserUseCase {
 
     const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      envs.JWT_ACCESS_SECRET || "access_secret", // Usa una variable de entorno
+      envs.JWT_ACCESS_SECRET, // Usa una variable de entorno
       { expiresIn: "15m" } // <-- Dura muy poco
     );
 
     // 4. Generar el refreshToken de sesión JWT aquí. larga duracion
     const refreshToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      envs.JWT_REFRESH_SECRET || "refresh_secret_super_segura",
+      envs.JWT_REFRESH_SECRET ,
       { expiresIn: "7d" }
     );
 

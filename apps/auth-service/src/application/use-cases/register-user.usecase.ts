@@ -41,7 +41,7 @@ export class RegisterUserUseCase {
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
     // 3. Generar el token de verificación (lógica de aplicación).
-    const verificationToken = jwt.sign({}, envs.JWT_ACCESS_SECRET || 'secret_for_verification', { expiresIn: '1h' });
+    const verificationToken = jwt.sign({}, envs.JWT_ACCESS_SECRET, { expiresIn: '1h' });
     const decodedToken: any = jwt.decode(verificationToken);
     const expirationDate = new Date(decodedToken.exp * 1000);
 
