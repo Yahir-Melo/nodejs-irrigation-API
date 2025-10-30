@@ -21,12 +21,15 @@ export class AuthMiddleware {
       // 2. Verificar el token con nuestro secreto
       const payload = jwt.verify(
         token,
-        envs.JWT_ACCESS_SECRET || 'access_secret'
+        envs.JWT_ACCESS_SECRET 
       );
 
       // 3. Si es válido, adjuntamos el payload a la petición
       // para que las rutas posteriores puedan saber qué usuario hizo la petición.
-      req.body.user = payload;
+     // --- 👇 CAMBIO CLAVE AQUÍ ---
+      // Adjuntamos el payload directamente a 'req', no a 'req.body'.
+      // Usamos '(req as any)' para evitar errores de TypeScript por ahora.
+      (req as any).user = payload;
 
       // 4. Dejar pasar al siguiente middleware o a la ruta final.
       next();
