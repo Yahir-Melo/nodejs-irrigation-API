@@ -3,6 +3,8 @@ import type { CreateProductUseCase } from '../../application/use-cases/create-pr
 import { CustomError } from '../../domain/errors/custom.error.js';
 import { CreateProductDto } from '../../application/dtos/create_product.dto.js';
 import type { GetProductByIdUseCase } from '../../application/use-cases/get-product-by-id.usecase.js';
+import type { GetProductsUseCase } from '../../application/use-cases/get-products.usecase.js';
+import { GetProductsDto } from '../../application/dtos/get-products.dto.js';
 
 export class InventoryController {
    // (Aquí se inyectan otros casos de uso... GetProductsUseCase, etc.)
@@ -10,6 +12,8 @@ export class InventoryController {
     private readonly createProductUseCase: CreateProductUseCase,
     // 👇 Inyecta el nuevo caso de uso
     private readonly getProductByIdUseCase: GetProductByIdUseCase,
+    
+    private readonly getProductsUseCase: GetProductsUseCase
     
     
   ) {}
@@ -62,10 +66,19 @@ export class InventoryController {
 
 
 
-   getProducts() {
-      throw new Error("Method not implemented.");
-   }
+   // 👇 AÑADE ESTE NUEVO MÉTODO PARA OBTENER LOS PRODUCTOS 
+  getProducts = (req: Request, res: Response) => {
+    // 1. Los filtros vienen de 'req.query' (ej. ?page=1&search=taza)
+    const [error, getProductsDto] = GetProductsDto.create(req.query);
 
+    // 2. Validamos el DTO
+    if (error) return res.status(400).json({ error });
+
+    // 3. Ejecutamos el Caso de Uso
+    this.getProductsUseCase.execute(getProductsDto!)
+      .then(products => res.json(products))
+      .catch(error => this.handleError(error, res));
+  }
    
   
   
