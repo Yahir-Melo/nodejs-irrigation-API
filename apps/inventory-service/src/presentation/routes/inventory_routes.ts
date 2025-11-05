@@ -5,6 +5,7 @@ import { ProductPrismaDatasource } from "../../infraestructure/datasource/prisma
 import { CreateProductUseCase } from "../../application/use-cases/create-product.usecase.js";
 import { get } from "http";
 import { GetProductByIdUseCase } from "../../application/use-cases/get-product-by-id.usecase.js";
+import { GetProductsUseCase } from "../../application/use-cases/get-products.usecase.js";
 
 export class InventoryRoutes {
 
@@ -18,10 +19,11 @@ export class InventoryRoutes {
     const productRepository = datasource; // O un repositorio intermedio si tuvieras
     const createProductUseCase = new CreateProductUseCase(productRepository);
     const getProductByIdUseCase = new GetProductByIdUseCase(productRepository);
+    const getProductsUseCase = new GetProductsUseCase(productRepository);
 
 
     // 2. Inyectar dependencias al controlador
-    const controller = new InventoryController(createProductUseCase,getProductByIdUseCase );
+    const controller = new InventoryController(createProductUseCase,getProductByIdUseCase,getProductsUseCase );
 
     // ✅ CREAR un nuevo producto
     router.post('/products',AuthMiddleware.validateJWT,controller.createProduct);
@@ -30,7 +32,7 @@ export class InventoryRoutes {
     router.get('/products/:id',AuthMiddleware.validateJWT,controller.getProductById);
 
     // ✅ LEER todos los productos
-    router.get('/products',controller.getProducts);
+    router.get('/products',AuthMiddleware.validateJWT,controller.getProducts);
 
     // ✅ ACTUALIZAR un producto por su ID
     router.put('/products/:id',controller.updateProduct);
